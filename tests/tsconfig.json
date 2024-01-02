@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  "references": [{ "name": "brints-estate-backend", "path": ".." }],
+  "compilerOptions": {
+    "types": ["jest"],
+    "rootDir": ".."
+  },
+  "include": ["."]
+}

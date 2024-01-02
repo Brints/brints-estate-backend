@@ -7,6 +7,7 @@
   "scripts": {
     "build": "yarn tsc",
     "dev": "ts-node src/server.ts",
+    "lint": "yarn eslint --ext js,ts src",
     "start": "node dist/server.js",
     "test": "yarn jest --coverage"
   },

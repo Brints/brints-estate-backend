@@ -6,15 +6,21 @@ dotenv.config();
 
 const port: string | number = process.env["PORT"] || 1234;
 
+// import database connection
+import connectDB from "./database/connect.database";
+
+// set port
 app.set("port", port);
 
+// configure the server
 const server: http.Server = http.createServer(app);
 
 // function to connect to database and start server
-const startServer = () => {
+const startServer = async () => {
   try {
     // connect to database
-    // await app.locals.db.connect();
+    await connectDB();
+
     server.listen(port);
     server.on("error", (error: Error) => {
       console.error(error);
@@ -26,15 +32,14 @@ const startServer = () => {
     console.error(error);
   }
 };
-startServer();
 
-// startServer()
-//   .then(() => {
-//     console.log("🚀 Server started successfully");
-//   })
-//   .catch((error) => {
-//     console.error(error);
-//   });
+startServer()
+  .then(() => {
+    console.log("🚀 Server started successfully");
+  })
+  .catch((error) => {
+    console.error(error);
+  });
 
 // gracefully shutdown server
 process.on("SIGINT", () => {

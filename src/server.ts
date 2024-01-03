@@ -35,3 +35,21 @@ startServer();
 //   .catch((error) => {
 //     console.error(error);
 //   });
+
+// gracefully shutdown server
+process.on("SIGINT", () => {
+  console.log("👋 Bye bye!");
+  process.exit();
+});
+
+// handle unhandled promise rejections
+process.on("unhandledRejection", (error: Error) => {
+  console.error(error);
+  process.exit(1);
+});
+
+// handle uncaught exceptions
+process.on("uncaughtException", (error: Error) => {
+  console.error(error);
+  process.exit(1);
+});

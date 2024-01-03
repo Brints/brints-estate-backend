@@ -1,9 +1,9 @@
 import * as http from "node:http";
 import app from "./app";
-// import { normalizePort, onError, onListening } from "./utils/utils";
 import * as dotenv from "dotenv";
 dotenv.config();
 
+// set port
 const port: string | number = process.env["PORT"] || 1234;
 
 // import database connection
@@ -25,9 +25,9 @@ const startServer = async () => {
     server.on("error", (error: Error) => {
       console.error(error);
     });
-    server.on("listening", () => {
-      console.log(`🚀 Server running on port ${port}`);
-    });
+    // server.on("listening", () => {
+    //   console.log(`🚀 Server running on port ${port}`);
+    // });
   } catch (error) {
     console.error(error);
   }
@@ -35,7 +35,7 @@ const startServer = async () => {
 
 startServer()
   .then(() => {
-    console.log("🚀 Server started successfully");
+    console.log("🚀 Server started successfully on port " + port);
   })
   .catch((error) => {
     console.error(error);

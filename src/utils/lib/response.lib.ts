@@ -1,52 +1,51 @@
-import { getReasonPhrase, StatusCodes } from "http-status-codes";
 import { Response } from "express";
+import { StatusCodes, getReasonPhrase } from "http-status-codes";
 
-interface ResponseData<T> {
-  success: boolean;
-  message?: string;
-  payload?: T;
-  error?: string;
+// Define a type for the data in the success response
+export interface SuccessResponseData<T> {
+  message: string;
+  data: T;
+  statusCode: number;
 }
 
+// Define a type for the data in the error response
+export interface ErrorResponseData {
+  success: boolean;
+  error: {
+    type: string;
+    statusCode: number;
+    message: string;
+  };
+}
+
+// Helper function for success Response
 export const successResponse = <T>(
-  res: Response,
-  message = "",
+  res: Response<SuccessResponseData<T>>,
+  message: string,
   data: T,
-  code = StatusCodes.OK
-) => {
-  const responseData: ResponseData<T> = {
-    success: true,
+  statusCode: number = StatusCodes.OK
+): Response<SuccessResponseData<T>> => {
+  const successData: SuccessResponseData<T> = {
     message,
-    payload: data,
+    data,
+    statusCode,
   };
-  return res.status(code).json(responseData);
+  return res.status(statusCode).json(successData);
 };
 
+// Helper function for error Response
 export const errorResponse = (
-  res: Response,
-  message = "",
-  code = StatusCodes.INTERNAL_SERVER_ERROR
-) => {
-  const responseData: ResponseData<null> = {
+  res: Response<ErrorResponseData>,
+  message: string,
+  statusCode: number = StatusCodes.BAD_REQUEST
+): Response<ErrorResponseData> => {
+  const errorData: ErrorResponseData = {
     success: false,
-    message,
-    payload: null,
-    error: getReasonPhrase(code),
+    error: {
+      type: getReasonPhrase(statusCode),
+      statusCode,
+      message,
+    },
   };
-  return res.status(code).json(responseData);
+  return res.status(statusCode).json(errorData);
 };
-
-// export const successResponse = (res, data, message = '', code = StatusCodes.OK) => {
-//   return res.status(code).json({
-//     message,
-//     data,
-//     error: false,
-//   });
-// };
-
-// export const errorResponse = (res, message = '', code = StatusCodes.INTERNAL_SERVER_ERROR) => {
-//   return res.status(code).json({
-//     message,
-//     error: true,
-//   });
-// };

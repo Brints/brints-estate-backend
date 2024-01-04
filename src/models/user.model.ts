@@ -1,50 +1,31 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Document } from "mongoose";
 
 // User interface
-export interface IUser {
+export interface IUser extends Document {
   fullname: string;
   email: string;
   password: string;
-  gender?: string;
-  phone?: string;
-  usertype: string;
+  gender: string;
+  phone: string;
+  role: string;
 }
 
 // User schema
 const userSchema: Schema = new Schema(
   {
-    fullname: {
+    fullname: { type: String, required: true, trim: true },
+    email: { type: String, required: true, trim: true, unique: true },
+    password: { type: String, required: true, trim: true },
+    gender: { type: String, enum: ["female", "male"] },
+    phone: { type: String, required: true, trim: true },
+    role: {
       type: String,
-      required: [true, "Please enter your name"],
-      trim: true,
-    },
-    email: {
-      type: String,
-      required: [true, "Please enter your email"],
-      trim: true,
-      unique: true,
-    },
-    password: {
-      type: String,
-      required: [true, "Please enter your password"],
-      trim: true,
-    },
-    gender: {
-      type: String,
-      enum: ["female", "male"],
-    },
-    phone: {
-      type: String,
-      trim: true,
-    },
-    usertype: {
-      type: String,
+      required: true,
       enum: ["admin", "user", "agent", "landlord"],
+      default: "user",
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 // User model

@@ -4,11 +4,15 @@ type AsyncFunction = (
   req: Request,
   res: Response,
   next: NextFunction
-) => Promise<void>;
+) => Promise<unknown>;
 
 const tryCatch = (fn: AsyncFunction) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    return fn(req, res, next).catch(next);
+    try {
+      await fn(req, res, next);
+    } catch (error) {
+      next(error);
+    }
   };
 };
 

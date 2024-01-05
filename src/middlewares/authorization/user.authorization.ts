@@ -14,7 +14,7 @@ export const authenticatedUser = async (
   req: AuthenticatedUserRequest,
   res: AuthenticatedUserResponse,
   next: NextFunction
-) => {
+): Promise<AuthenticatedUserResponse | void> => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {

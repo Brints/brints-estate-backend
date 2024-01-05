@@ -8,6 +8,11 @@ export interface IUser extends Document {
   gender: string;
   phone: string;
   role: string;
+  verified: boolean;
+  verificationToken: string;
+  verificationTokenExpire: Date;
+  resetPasswordToken: string;
+  resetPasswordExpire: Date;
   [key: string]: unknown;
 }
 
@@ -25,6 +30,11 @@ const userSchema: Schema = new Schema(
       enum: ["admin", "user", "agent", "landlord"],
       default: "user",
     },
+    verified: { type: Boolean, default: false },
+    verificationToken: { type: String, required: true, trim: true },
+    verificationTokenExpire: { type: Date, required: true },
+    resetPasswordToken: { type: String, trim: true },
+    resetPasswordExpire: { type: Date },
   },
   { timestamps: true }
 );

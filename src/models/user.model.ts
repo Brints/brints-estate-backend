@@ -8,6 +8,7 @@ export interface IUser extends Document {
   gender: string;
   phone: string;
   role: string;
+  [key: string]: unknown;
 }
 
 // User schema

@@ -11,8 +11,8 @@ export interface IUser extends Document {
   verified: boolean;
   verificationToken: string;
   verificationTokenExpire: Date;
-  resetPasswordToken: string;
-  resetPasswordExpire: Date;
+  resetPasswordToken?: string;
+  resetPasswordExpire?: Date;
   [key: string]: unknown;
 }
 

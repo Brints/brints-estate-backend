@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
+import { omit } from "lodash";
 import tryCatch from "../utils/lib/try-catch.lib";
 import { successResponse, errorResponse } from "../utils/lib/response.lib";
 import { User, IUser } from "../models/user.model";
@@ -31,8 +32,8 @@ interface RegisterUserRequestBody {
   verified: boolean;
   verificationToken: string;
   verificationTokenExpire: Date;
-  resetPasswordToken: string;
-  resetPasswordExpire: Date;
+  resetPasswordToken?: string;
+  resetPasswordExpire?: Date;
 }
 
 interface RegisterUserError {
@@ -45,6 +46,8 @@ type RegisterUser = Request<unknown, unknown, RegisterUserRequestBody, unknown>;
 type RegisterUserResponse = Response<
   SuccessResponseData<IUser> | ErrorResponseData
 >;
+
+// Promise<Response<ErrorResponseData>>
 
 export const registerUser = tryCatch(
   async (req: RegisterUser, res: RegisterUserResponse) => {
@@ -88,10 +91,11 @@ export const registerUser = tryCatch(
     const role = users.length === 0 ? "admin" : "user";
 
     // Generate verification token
-    const verificationToken = generateVerificationToken()
+    const verificationToken = generateVerificationToken();
 
     // Set verification token expire date to 3 hours
-    
+    const verificationTokenExpire = new Date();
+    verificationTokenExpire.setHours(verificationTokenExpire.getHours() + 3);
 
     // Create user
     const newUser = await User.create({
@@ -101,8 +105,15 @@ export const registerUser = tryCatch(
       phone,
       role,
       gender,
-      verificationToken
+      verificationToken,
+      verificationTokenExpire,
     });
+
+    // remove password from response
+    const newUserWithoutPassword = omit(newUser, ["password"]);
+
+    // Update newUser with the new object (without password)
+    Object.assign(newUser, newUserWithoutPassword);
 
     // Return success response
     return successResponse<IUser>(

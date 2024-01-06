@@ -2,13 +2,14 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import tryCatch from "../utils/lib/try-catch.lib";
 import { successResponse, errorResponse } from "../utils/lib/response.lib";
-import { User, IUser } from "../models/user.model";
+import { User } from "../models/user.model";
+import { IUser } from "../@types";
 import BcryptHelper from "../utils/helpers/bcrypt.helper";
 import { generateVerificationToken } from "../utils/lib/verification-token.lib";
-import {
-  SuccessResponseData,
-  ErrorResponseData,
-} from "../utils/lib/response.lib";
+
+// import interfaces
+import { RegisterUserRequestBody, RegisterUserError } from "../@types";
+import { SuccessResponseData, ErrorResponseData } from "../@types";
 
 /**
  * @description Register a new user
@@ -19,26 +20,6 @@ import {
  * @returns {JSON} message
  * @returns {JSON} user
  */
-
-interface RegisterUserRequestBody {
-  fullname: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  gender: string;
-  phone: string;
-  role: string;
-  verified: boolean;
-  verificationToken: string;
-  verificationTokenExpire: Date;
-  resetPasswordToken?: string;
-  resetPasswordExpire?: Date;
-}
-
-interface RegisterUserError {
-  message: string;
-  statusCode: number;
-}
 
 type RegisterUser = Request<unknown, unknown, RegisterUserRequestBody, unknown>;
 

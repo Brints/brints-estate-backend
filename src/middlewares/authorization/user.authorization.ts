@@ -4,9 +4,16 @@ import { errorResponse, ErrorResponseData } from "../../utils/lib/response.lib";
 import { verifyToken } from "../../utils/helpers/jwt.helper";
 import { User, IUser } from "../../models/user.model";
 
+interface AuthenticatedUserError {
+  message: string;
+  statusCode: number;
+}
+
 interface AuthenticatedUserRequest extends Request {
   user?: Record<string, unknown>;
 }
+
+// type AuthenticatedUserRequest = Request<unknown, unknown, unknown, unknown>;
 
 type AuthenticatedUserResponse = Response<ErrorResponseData>;
 
@@ -18,21 +25,29 @@ export const authenticatedUser = async (
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return errorResponse(res, "Unauthorized", StatusCodes.UNAUTHORIZED);
+      const err: AuthenticatedUserError = {
+        message: "Unauthorized",
+        statusCode: StatusCodes.UNAUTHORIZED,
+      };
+      return errorResponse(res, err.message, err.statusCode);
     }
 
     const token = authHeader.split(" ")[1];
     if (!token) {
-      return errorResponse(res, "Unauthorized", StatusCodes.UNAUTHORIZED);
+      const err: AuthenticatedUserError = {
+        message: "Unauthorized",
+        statusCode: StatusCodes.UNAUTHORIZED,
+      };
+      return errorResponse(res, err.message, err.statusCode);
     }
 
     const payload = verifyToken(token);
     if (!payload) {
-      return errorResponse(
-        res,
-        "Invalid Token. Please login again",
-        StatusCodes.FORBIDDEN
-      );
+      const err: AuthenticatedUserError = {
+        message: "Please login again.",
+        statusCode: StatusCodes.FORBIDDEN,
+      };
+      return errorResponse(res, err.message, err.statusCode);
     }
 
     const user = await User.findOne({ token });
@@ -40,7 +55,6 @@ export const authenticatedUser = async (
     // get user from database and attach to request object
     req.user = user as IUser;
     next();
-    return;
   } catch (error) {
     console.error(error);
     return errorResponse(res, "Unauthorized", StatusCodes.UNAUTHORIZED);

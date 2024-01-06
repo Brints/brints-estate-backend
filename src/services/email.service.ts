@@ -1,13 +1,8 @@
 import * as nodemailer from "nodemailer";
 import * as nodemailerMailgun from "nodemailer-mailgun-transport";
 import * as dotenv from "dotenv";
+import { MailgunConfig } from "../@types";
 dotenv.config();
-
-interface MailgunConfig {
-  apiKey: string;
-  domain: string;
-}
-
 class EmailService {
   private readonly transporter: nodemailer.Transporter;
 

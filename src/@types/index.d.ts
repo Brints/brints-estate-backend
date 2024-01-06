@@ -49,3 +49,24 @@ declare interface ErrorResponseData {
     message: string;
   };
 }
+
+declare interface MailgunConfig {
+  apiKey: string;
+  domain: string;
+}
+
+// declare interface RequestBody {
+//   [key: string]: unknown;
+// }
+
+// declare interface RequestQuery {
+//   [key: string]: unknown;
+// }
+
+// declare interface RequestParams {
+//   [key: string]: unknown;
+// }
+
+// declare interface RequestHeaders {
+//   [key: string]: unknown;
+// }

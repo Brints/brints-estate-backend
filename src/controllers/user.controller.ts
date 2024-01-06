@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { omit } from "lodash";
 import tryCatch from "../utils/lib/try-catch.lib";
 import { successResponse, errorResponse } from "../utils/lib/response.lib";
 import { User, IUser } from "../models/user.model";
@@ -98,7 +97,7 @@ export const registerUser = tryCatch(
     verificationTokenExpire.setHours(verificationTokenExpire.getHours() + 3);
 
     // Create user
-    const newUser = await User.create({
+    const newUser: IUser = await User.create({
       fullname,
       email,
       password: hashedPassword,
@@ -109,17 +108,26 @@ export const registerUser = tryCatch(
       verificationTokenExpire,
     });
 
-    // remove password from response
-    const newUserWithoutPassword = omit(newUser, ["password"]);
+    // // remove password from response
+    // const userResponse: IUser = omit(newUser.toObject(), ["password"]);
 
-    // Update newUser with the new object (without password)
-    Object.assign(newUser, newUserWithoutPassword);
+    // Return user object with few details
+    const userResponse = {
+      fullname: newUser.fullname,
+      email: newUser.email,
+      gender: newUser.gender,
+      phone: newUser.phone,
+      role: newUser.role,
+      verified: newUser.verified,
+      verificationToken: newUser.verificationToken,
+      verificationTokenExpire: newUser.verificationTokenExpire,
+    };
 
     // Return success response
-    return successResponse<IUser>(
+    return successResponse(
       res,
       "User registered successfully",
-      newUser,
+      userResponse as IUser,
       StatusCodes.CREATED
     );
   }

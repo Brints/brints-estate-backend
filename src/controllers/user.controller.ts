@@ -6,6 +6,7 @@ import { User } from "../models/user.model";
 import { IUser } from "../@types";
 import BcryptHelper from "../utils/helpers/bcrypt.helper";
 import { generateVerificationToken } from "../utils/lib/verification-token.lib";
+import { emailService } from "../services/email.service";
 
 // import interfaces
 import { RegisterUserRequestBody, RegisterUserError } from "../@types";
@@ -26,8 +27,6 @@ type RegisterUser = Request<unknown, unknown, RegisterUserRequestBody, unknown>;
 type RegisterUserResponse = Response<
   SuccessResponseData<IUser> | ErrorResponseData
 >;
-
-// Promise<Response<ErrorResponseData>>
 
 export const registerUser = tryCatch(
   async (req: RegisterUser, res: RegisterUserResponse) => {
@@ -77,6 +76,12 @@ export const registerUser = tryCatch(
     const verificationTokenExpire = new Date();
     verificationTokenExpire.setHours(verificationTokenExpire.getHours() + 3);
 
+    // time verification token expires in hours
+    const expiration =
+      Math.round(
+        (verificationTokenExpire.getTime() - new Date().getTime()) / 3600000
+      ) + " hours";
+
     // Create user
     const newUser: IUser = await User.create({
       fullname,
@@ -88,6 +93,20 @@ export const registerUser = tryCatch(
       verificationToken,
       verificationTokenExpire,
     });
+
+    // create verification url
+    const verificationUrl = `${process.env["BASE_URL"]}/user/verify-email/${verificationToken}&email=${newUser.email}`;
+
+    // Send verification email
+    await emailService.sendEmail(
+      newUser.email,
+      "Verify your email",
+      `<h2>Hello, <span style="color: crimson">${
+        newUser.fullname.split(" ")[0]
+      }</span></h2>
+      <p>Thanks for creating an account with us. Please click the link below to verify your email address. Verification link expires in ${expiration}</p>
+      <a href="${verificationUrl}" target="_blank" style="background-color: crimson; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Verify Email</a>`
+    );
 
     // // remove password from response
     // const userResponse: IUser = omit(newUser.toObject(), ["password"]);

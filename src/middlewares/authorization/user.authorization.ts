@@ -1,8 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
-import { errorResponse, ErrorResponseData } from "../../utils/lib/response.lib";
+import { errorResponse } from "../../utils/lib/response.lib";
 import { verifyToken } from "../../utils/helpers/jwt.helper";
-import { User, IUser } from "../../models/user.model";
+import { User } from "../../models/user.model";
+
+// import interfaces
+import { ErrorResponseData, IUser } from "../../@types";
 
 interface AuthenticatedUserError {
   message: string;
@@ -12,8 +15,6 @@ interface AuthenticatedUserError {
 interface AuthenticatedUserRequest extends Request {
   user?: Record<string, unknown>;
 }
-
-// type AuthenticatedUserRequest = Request<unknown, unknown, unknown, unknown>;
 
 type AuthenticatedUserResponse = Response<ErrorResponseData>;
 

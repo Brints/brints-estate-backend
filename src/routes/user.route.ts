@@ -4,14 +4,14 @@ import { Router } from "express";
 import * as userController from "../controllers/user.controller";
 
 // middlewares
-import * as userAuthorization from "../middlewares/authorization/user.authorization";
+// import * as userAuthorization from "../middlewares/authorization/user.authorization";
 
 const userRouter: Router = Router();
 
 // routes
 userRouter.post(
   "/register",
-  userAuthorization.authenticatedUser,
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   userController.registerUser
 );
 

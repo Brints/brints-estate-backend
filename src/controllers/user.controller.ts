@@ -1,5 +1,8 @@
+// import libraries
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
+
+// import custom libraries
 import tryCatch from "../utils/lib/try-catch.lib";
 import { successResponse, errorResponse } from "../utils/lib/response.lib";
 import { User } from "../models/user.model";
@@ -7,6 +10,7 @@ import { IUser } from "../@types";
 import BcryptHelper from "../utils/helpers/bcrypt.helper";
 import { generateVerificationToken } from "../utils/lib/verification-token.lib";
 import { emailService } from "../services/email.service";
+import { CapitalizeFirstLetter } from "../utils/helpers/user.helper";
 
 // import interfaces
 import { RegisterUserRequestBody, RegisterUserError } from "../@types";
@@ -34,10 +38,17 @@ export const registerUser = tryCatch(
     const { fullname, email, phone, gender, password, confirmPassword } =
       req.body;
 
-    // Validate user input
-    if (!fullname || !email) {
+    // validate user inputs
+    if (
+      !fullname ||
+      !email ||
+      !phone ||
+      !gender ||
+      !password ||
+      !confirmPassword
+    ) {
       const err: RegisterUserError = {
-        message: "Please fill in all fields",
+        message: "All fields are required",
         statusCode: StatusCodes.BAD_REQUEST,
       };
       return errorResponse(res, err.message, err.statusCode);
@@ -62,6 +73,10 @@ export const registerUser = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
+    // Capitalize first letter of fullname
+    const capitalizedFullname =
+      CapitalizeFirstLetter.capitalizeFirstLetter(fullname);
+
     // Hash user password
     const hashedPassword = await BcryptHelper.hashPassword(password);
 
@@ -84,7 +99,7 @@ export const registerUser = tryCatch(
 
     // Create user
     const newUser: IUser = await User.create({
-      fullname,
+      fullname: capitalizedFullname,
       email,
       password: hashedPassword,
       phone,

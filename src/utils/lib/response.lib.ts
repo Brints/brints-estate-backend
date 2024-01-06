@@ -1,22 +1,7 @@
 import { Response } from "express";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
 
-// Define a type for the data in the success response
-export interface SuccessResponseData<T> {
-  message: string;
-  data: T;
-  statusCode: number;
-}
-
-// Define a type for the data in the error response
-export interface ErrorResponseData {
-  success: boolean;
-  error: {
-    type: string;
-    statusCode: number;
-    message: string;
-  };
-}
+import { SuccessResponseData, ErrorResponseData } from "../../@types";
 
 // Helper function for success Response
 export const successResponse = <T>(

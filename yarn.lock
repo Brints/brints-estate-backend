@@ -2140,7 +2140,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/nodemailer@npm:^6":
+"@types/nodemailer-mailgun-transport@npm:^1.4.6":
+  version: 1.4.6
+  resolution: "@types/nodemailer-mailgun-transport@npm:1.4.6"
+  dependencies:
+    "@types/nodemailer": "npm:*"
+  checksum: bf460338480c16b8d7f1c62ef996254aa05d1b5b023ab8283a70aa7e7fd6aebff91afaa181965e65f6a9068157e296942f1dcb56a75f77d14820403dfcab89b6
+  languageName: node
+  linkType: hard
+
+"@types/nodemailer@npm:*, @types/nodemailer@npm:^6":
   version: 6.4.14
   resolution: "@types/nodemailer@npm:6.4.14"
   dependencies:
@@ -2811,6 +2820,7 @@ __metadata:
     "@types/morgan": "npm:^1"
     "@types/node": "npm:^20.10.6"
     "@types/nodemailer": "npm:^6"
+    "@types/nodemailer-mailgun-transport": "npm:^1.4.6"
     "@types/supertest": "npm:^6"
     "@typescript-eslint/eslint-plugin": "npm:^6.17.0"
     "@typescript-eslint/parser": "npm:^6.17.0"

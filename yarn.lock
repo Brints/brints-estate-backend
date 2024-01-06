@@ -2094,6 +2094,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/lodash@npm:^4":
+  version: 4.14.202
+  resolution: "@types/lodash@npm:4.14.202"
+  checksum: 6064d43c8f454170841bd67c8266cc9069d9e570a72ca63f06bceb484cb4a3ee60c9c1f305c1b9e3a87826049fd41124b8ef265c4dd08b00f6766609c7fe9973
+  languageName: node
+  linkType: hard
+
 "@types/methods@npm:^1.1.4":
   version: 1.1.4
   resolution: "@types/methods@npm:1.1.4"
@@ -2800,6 +2807,7 @@ __metadata:
     "@types/eslint": "npm:^8"
     "@types/express": "npm:^4.17.21"
     "@types/jsonwebtoken": "npm:^9"
+    "@types/lodash": "npm:^4"
     "@types/morgan": "npm:^1"
     "@types/node": "npm:^20.10.6"
     "@types/nodemailer": "npm:^6"
@@ -2817,6 +2825,7 @@ __metadata:
     http-status-codes: "npm:^2.3.0"
     jest: "npm:^29.7.0"
     jsonwebtoken: "npm:^9.0.2"
+    lodash: "npm:^4.17.21"
     mongoose: "npm:^8.0.3"
     morgan: "npm:^1.10.0"
     nodemailer: "npm:^6.9.8"

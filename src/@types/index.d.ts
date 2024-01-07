@@ -1,6 +1,7 @@
 import { Document } from "mongoose";
 // import { Request } from "express";
 declare interface IUser extends Document {
+  image?: { url: string; filename: string }[];
   fullname: string;
   email: string;
   password: string;
@@ -16,6 +17,7 @@ declare interface IUser extends Document {
 }
 
 declare interface RegisterUserRequestBody {
+  image?: { url: string; filename: string }[];
   fullname: string;
   email: string;
   password: string;

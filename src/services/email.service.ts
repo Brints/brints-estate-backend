@@ -35,8 +35,8 @@ class EmailService {
 }
 
 const mailgunConfig: MailgunConfig = {
-  apiKey: process.env["MAILGUN_API_KEY"] || "",
-  domain: process.env["MAILGUN_DOMAIN"] || "",
+  apiKey: process.env["MAILGUN_API_KEY"] as string,
+  domain: process.env["MAILGUN_DOMAIN"] as string,
 };
 
 export const emailService = new EmailService(mailgunConfig);

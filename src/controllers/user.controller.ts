@@ -11,6 +11,7 @@ import BcryptHelper from "../utils/helpers/bcrypt.helper";
 import { generateVerificationToken } from "../utils/lib/verification-token.lib";
 import { emailService } from "../services/email.service";
 import { CapitalizeFirstLetter } from "../utils/helpers/user.helper";
+import { cloudinary } from "../config/multer.config";
 
 // import interfaces
 import { RegisterUserRequestBody, RegisterUserError } from "../@types";
@@ -35,7 +36,7 @@ type RegisterUserResponse = Response<
 export const registerUser = tryCatch(
   async (req: RegisterUser, res: RegisterUserResponse) => {
     // Get user input
-    const { fullname, email, phone, gender, password, confirmPassword } =
+    const { image, fullname, email, phone, gender, password, confirmPassword } =
       req.body;
 
     // validate user inputs
@@ -98,7 +99,8 @@ export const registerUser = tryCatch(
       ) + " hours";
 
     // Create user
-    const newUser: IUser = await User.create({
+    const newUser: IUser = new User({
+      image,
       fullname: capitalizedFullname,
       email,
       password: hashedPassword,
@@ -108,6 +110,32 @@ export const registerUser = tryCatch(
       verificationToken,
       verificationTokenExpire,
     });
+    /*
+    if (req.files) {
+      const images = req.files as Express.Multer.File[];
+      const imageUrls = [];
+      for (const image of images) {
+        const result = await cloudinary.uploader.upload(image.path);
+        imageUrls.push({ url: result.secure_url, filename: result.public_id });
+      }
+      newUser.image = imageUrls;
+    }
+    */
+
+    // Upload images to cloudinary
+    if (req.files) {
+      const images = req.files as Express.Multer.File[];
+      const imagesUrl = await Promise.all(
+        images.map(async (image) => {
+          const result = await cloudinary.uploader.upload(image.path);
+          return { url: result.secure_url, filename: result.public_id };
+        })
+      );
+      newUser.image = imagesUrl;
+    }
+
+    // Save user to database
+    await newUser.save();
 
     // create verification url
     const verificationUrl = `${process.env["BASE_URL"]}/user/verify-email/${verificationToken}&email=${newUser.email}`;
@@ -128,6 +156,7 @@ export const registerUser = tryCatch(
 
     // Return user object with few details
     const userResponse = {
+      image: newUser.image,
       fullname: newUser.fullname,
       email: newUser.email,
       gender: newUser.gender,

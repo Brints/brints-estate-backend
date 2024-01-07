@@ -4,6 +4,7 @@ import { IUser } from "../@types";
 // User schema
 const userSchema: Schema = new Schema(
   {
+    image: [{ url: String, filename: String }],
     fullname: { type: String, required: true, trim: true },
     email: { type: String, required: true, trim: true, unique: true },
     password: { type: String, required: true, trim: true },

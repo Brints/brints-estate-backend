@@ -3,6 +3,7 @@ import * as express from "express";
 import * as morgan from "morgan";
 import * as cors from "cors";
 import helmet from "helmet";
+import * as multer from "multer";
 
 import { StatusCodes } from "http-status-codes";
 
@@ -28,6 +29,24 @@ app.get("/", (_req: express.Request, res: express.Response) => {
     message: "🚀 Brints Estate Backend Service",
   });
 });
+
+// error handling middleware for Multer
+app.use(
+  (
+    err: Error,
+    _req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: "🚫 File too large. It should not be more than 5MB",
+      });
+    } else {
+      return next(err);
+    }
+  }
+);
 
 // define 404 route handler
 app.all("*", (_req: express.Request, res: express.Response) => {

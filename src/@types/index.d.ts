@@ -55,6 +55,11 @@ declare interface MailgunConfig {
   domain: string;
 }
 
+declare interface CustomParams {
+  folder: string;
+  allowedFormats: string[];
+}
+
 // declare interface RequestBody {
 //   [key: string]: unknown;
 // }

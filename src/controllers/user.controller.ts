@@ -186,7 +186,7 @@ type VerifyEmailResponse = Response<
 export const verifyEmail = tryCatch(
   async (req: VerifyEmail, res: VerifyEmailResponse) => {
     // Get token and email from request params
-    const { token, email } = req.params as verifyEmailParams;
+    const { token, email }: verifyEmailParams = req.params as verifyEmailParams;
 
     // Check if token and email is provided
     if (!token || !email) {

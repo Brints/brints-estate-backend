@@ -26,8 +26,8 @@ declare interface RegisterUserRequestBody {
   phone: string;
   role: string;
   verified: boolean;
-  verificationToken: string;
-  verificationTokenExpire: Date | null;
+  verificationToken?: string;
+  verificationTokenExpire?: Date | null;
   resetPasswordToken?: string;
   resetPasswordExpire?: Date | null;
 }

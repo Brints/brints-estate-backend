@@ -40,7 +40,10 @@ app.use(
   ) => {
     if (err instanceof multer.MulterError) {
       return res.status(StatusCodes.BAD_REQUEST).json({
-        message: "🚫 File too large. It should not be more than 5MB",
+        message: {
+          size: "Image size should not be more than 5MB",
+          format: "Image format should be png, jpg or jpeg",
+        },
       });
     } else {
       return next(err);

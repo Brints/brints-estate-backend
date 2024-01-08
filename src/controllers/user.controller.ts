@@ -6,7 +6,6 @@ import { StatusCodes } from "http-status-codes";
 import tryCatch from "../utils/lib/try-catch.lib";
 import { successResponse, errorResponse } from "../utils/lib/response.lib";
 import { User } from "../models/user.model";
-import { IUser } from "../@types";
 import BcryptHelper from "../utils/helpers/bcrypt.helper";
 import { generateVerificationToken } from "../utils/lib/verification-token.lib";
 import { emailService } from "../services/email.service";
@@ -14,6 +13,7 @@ import { CapitalizeFirstLetter } from "../utils/helpers/user.helper";
 import { cloudinary } from "../config/multer.config";
 
 // import interfaces
+import { IUser } from "../@types";
 import { RegisterUserRequestBody, RegisterUserError } from "../@types";
 import { SuccessResponseData, ErrorResponseData } from "../@types";
 
@@ -98,6 +98,9 @@ export const registerUser = tryCatch(
         (verificationTokenExpire.getTime() - new Date().getTime()) / 3600000
       ) + " hours";
 
+    const resetPasswordExpire = null;
+    const resetPasswordToken = null;
+
     // Create user
     const newUser: IUser = new User({
       image,
@@ -109,18 +112,9 @@ export const registerUser = tryCatch(
       gender,
       verificationToken,
       verificationTokenExpire,
+      resetPasswordExpire,
+      resetPasswordToken,
     });
-    /*
-    if (req.files) {
-      const images = req.files as Express.Multer.File[];
-      const imageUrls = [];
-      for (const image of images) {
-        const result = await cloudinary.uploader.upload(image.path);
-        imageUrls.push({ url: result.secure_url, filename: result.public_id });
-      }
-      newUser.image = imageUrls;
-    }
-    */
 
     // Upload images to cloudinary
     if (req.files) {
@@ -151,9 +145,6 @@ export const registerUser = tryCatch(
       <a href="${verificationUrl}" target="_blank" style="background-color: crimson; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Verify Email</a>`
     );
 
-    // // remove password from response
-    // const userResponse: IUser = omit(newUser.toObject(), ["password"]);
-
     // Return user object with few details
     const userResponse = {
       image: newUser.image,
@@ -163,8 +154,6 @@ export const registerUser = tryCatch(
       phone: newUser.phone,
       role: newUser.role,
       verified: newUser.verified,
-      verificationToken: newUser.verificationToken,
-      verificationTokenExpire: newUser.verificationTokenExpire,
     };
 
     // Return success response

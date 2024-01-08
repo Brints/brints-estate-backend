@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Router } from "express";
 import { multerConfig } from "../config/multer.config";
 
@@ -10,7 +11,10 @@ import * as userController from "../controllers/user.controller";
 // import * as userAuthorization from "../middlewares/authorization/user.authorization";
 
 // validators
-import { validateUserRegistration } from "../middlewares/validations/user.validation";
+import {
+  validateUserRegistration,
+  //validateVerifyEmail,
+} from "../middlewares/validations/user.validation";
 
 const userRouter: Router = Router();
 
@@ -19,8 +23,9 @@ userRouter.post(
   "/register",
   upload,
   validateUserRegistration,
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   userController.registerUser
 );
+userRouter.get("/verify-email/:token/:email", userController.verifyEmail);
+userRouter.post("/login", userController.loginUser);
 
 export default userRouter;

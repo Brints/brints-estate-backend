@@ -10,9 +10,9 @@ declare interface IUser extends Document {
   role: string;
   verified: boolean;
   verificationToken: string;
-  verificationTokenExpire: Date;
+  verificationTokenExpire: Date | null;
   resetPasswordToken?: string;
-  resetPasswordExpire?: Date;
+  resetPasswordExpire?: Date | null;
   [key: string]: unknown;
 }
 
@@ -27,9 +27,9 @@ declare interface RegisterUserRequestBody {
   role: string;
   verified: boolean;
   verificationToken: string;
-  verificationTokenExpire: Date;
+  verificationTokenExpire: Date | null;
   resetPasswordToken?: string;
-  resetPasswordExpire?: Date;
+  resetPasswordExpire?: Date | null;
 }
 
 declare interface RegisterUserError {
@@ -41,6 +41,18 @@ declare interface SuccessResponseData<T> {
   message: string;
   data: T;
   statusCode: number;
+}
+
+declare interface SuccessResponseDataWithToken<T> {
+  message: string;
+  data: T;
+  token: string;
+  statusCode: number;
+}
+
+declare interface verifyEmailParams {
+  token: string;
+  email: string;
 }
 
 declare interface ErrorResponseData {

@@ -11,12 +11,14 @@ import { generateVerificationToken } from "../utils/lib/verification-token.lib";
 import { emailService } from "../services/email.service";
 import { CapitalizeFirstLetter } from "../utils/helpers/user.helper";
 import { cloudinary } from "../config/multer.config";
+import { generateToken } from "../utils/helpers/jwt.helper";
 
 // import interfaces
 import { IUser } from "../@types";
 import { RegisterUserRequestBody, RegisterUserError } from "../@types";
 import { SuccessResponseData, ErrorResponseData } from "../@types";
 import { verifyEmailParams } from "../@types";
+import { SuccessResponseDataWithToken } from "../@types";
 
 /**
  * @description Register a new user
@@ -132,8 +134,10 @@ export const registerUser = tryCatch(
     // Save user to database
     await newUser.save();
 
+    // /verify-email/:token&email=:email
+
     // create verification url
-    const verificationUrl = `${process.env["BASE_URL"]}/user/verify-email/${verificationToken}&email=${newUser.email}`;
+    const verificationUrl = `${process.env["BASE_URL"]}/user/verify-email/${verificationToken}/${newUser.email}`;
 
     // Send verification email
     await emailService.sendEmail(
@@ -239,19 +243,136 @@ export const verifyEmail = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
+    console.log(user.verificationTokenExpire);
+
     // Set user verified to true
     user.verified = true;
     user.verificationToken = "";
-    user.verificationTokenExpire = new Date();
+    user.verificationTokenExpire = null;
 
     // Save user to database
     await user.save();
+
+    // TODO: Send welcome email
+    await emailService.sendEmail(
+      user.email,
+      "Welcome to Brints Estate",
+      `<h2>Hello, <span style="color: crimson">${
+        user.fullname.split(" ")[0]
+      }</span></h2>
+      <p>Thanks for joining Brints Estate. We are glad to have you here.</p>`
+    );
+
+    // TODO: user details to be returned
+    const userResponse = {
+      image: user.image,
+      fullname: user.fullname,
+      email: user.email,
+      gender: user.gender,
+      phone: user.phone,
+      role: user.role,
+      verified: user.verified,
+    };
 
     // Return success response
     return successResponse(
       res,
       "User verified successfully",
-      user as IUser,
+      userResponse as IUser,
+      StatusCodes.OK
+    );
+  }
+);
+
+/**
+ * @description Login user
+ * @route POST /user/login
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {JSON} message
+ * @returns {JSON} user
+ * @access Public
+ */
+
+type LoginUser = Request<unknown, unknown, RegisterUserRequestBody, unknown>;
+
+// type LoginUserResponse = Response<
+//   SuccessResponseDataWithToken<IUser> | ErrorResponseData
+// >;
+
+type LoginUserResponse = Response<
+  | SuccessResponseDataWithToken<IUser>
+  | ErrorResponseData
+  | SuccessResponseData<IUser>,
+  Record<string, unknown>
+>;
+
+export const loginUser = tryCatch(
+  async (req: LoginUser, res: LoginUserResponse) => {
+    // Get user input
+    const { email, password } = req.body;
+
+    // validate user inputs
+    if (!email || !password) {
+      const err: RegisterUserError = {
+        message: "All fields are required",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Check if user exist
+    const user = await User.findOne({ email });
+    if (!user) {
+      const err: RegisterUserError = {
+        message: "User does not exist",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Check if user is verified
+    if (!user.verified) {
+      const err: RegisterUserError = {
+        message: "User is not verified",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Check if password match
+    const isMatch = await BcryptHelper.comparePassword(password, user.password);
+    if (!isMatch) {
+      const err: RegisterUserError = {
+        message: "Invalid credentials",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Generate token
+    const token = generateToken(
+      { id: user._id },
+      process.env["JWT_EXPIRES_IN"] as string
+    );
+
+    // Return user object with few details
+    const userResponse = {
+      image: user.image,
+      fullname: user.fullname,
+      email: user.email,
+      gender: user.gender,
+      phone: user.phone,
+      role: user.role,
+      verified: user.verified,
+      token,
+    };
+
+    // Return success response
+    return successResponse(
+      res,
+      "User logged in successfully",
+      userResponse as unknown as IUser,
       StatusCodes.OK
     );
   }

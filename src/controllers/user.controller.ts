@@ -16,6 +16,7 @@ import { cloudinary } from "../config/multer.config";
 import { IUser } from "../@types";
 import { RegisterUserRequestBody, RegisterUserError } from "../@types";
 import { SuccessResponseData, ErrorResponseData } from "../@types";
+import { verifyEmailParams } from "../@types";
 
 /**
  * @description Register a new user
@@ -99,7 +100,7 @@ export const registerUser = tryCatch(
       ) + " hours";
 
     const resetPasswordExpire = null;
-    const resetPasswordToken = null;
+    const resetPasswordToken = "";
 
     // Create user
     const newUser: IUser = new User({
@@ -162,6 +163,96 @@ export const registerUser = tryCatch(
       "User registered successfully",
       userResponse as IUser,
       StatusCodes.CREATED
+    );
+  }
+);
+
+/**
+ * @description Verify user email
+ * @route GET /user/verify-email/:token&email=:email
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {JSON} message
+ * @returns {JSON} user
+ * @access Public
+ */
+
+type VerifyEmail = Request<unknown, unknown, verifyEmailParams, unknown>;
+
+type VerifyEmailResponse = Response<
+  SuccessResponseData<IUser> | ErrorResponseData
+>;
+
+export const verifyEmail = tryCatch(
+  async (req: VerifyEmail, res: VerifyEmailResponse) => {
+    // Get token and email from request params
+    const { token, email } = req.params as verifyEmailParams;
+
+    // Check if token and email is provided
+    if (!token || !email) {
+      const err: RegisterUserError = {
+        message: "Token and email is required",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    // Check if user exist
+    if (!user) {
+      const err: RegisterUserError = {
+        message: "User does not exist",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Check if user is already verified
+    if (user.verified) {
+      const err: RegisterUserError = {
+        message: "User is already verified",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Check if verification token is valid
+    if (user.verificationToken !== token) {
+      const err: RegisterUserError = {
+        message: "Invalid verification token",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Check if verification token is expired
+    if (
+      user.verificationTokenExpire &&
+      user.verificationTokenExpire < new Date()
+    ) {
+      const err: RegisterUserError = {
+        message: "Verification token has expired",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Set user verified to true
+    user.verified = true;
+    user.verificationToken = "";
+    user.verificationTokenExpire = new Date();
+
+    // Save user to database
+    await user.save();
+
+    // Return success response
+    return successResponse(
+      res,
+      "User verified successfully",
+      user as IUser,
+      StatusCodes.OK
     );
   }
 );

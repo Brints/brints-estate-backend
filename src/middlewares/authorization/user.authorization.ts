@@ -51,7 +51,9 @@ export const authenticatedUser = async (
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    const user = await User.findOne({ token });
+    const user = await User.findOne({ _id: payload["id"] });
+
+    console.log(user);
 
     // get user from database and attach to request object
     req.user = user as IUser;

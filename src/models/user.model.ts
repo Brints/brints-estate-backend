@@ -17,6 +17,7 @@ const userSchema: Schema = new Schema(
       default: "user",
     },
     verified: { type: Boolean, default: false },
+    last_login: { type: Date },
     verificationToken: { type: String, trim: true },
     verificationTokenExpire: { type: Date },
     resetPasswordToken: { type: String, trim: true },

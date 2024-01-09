@@ -1,6 +1,8 @@
 // import libraries
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
+import { ParsedQs } from "qs";
+import { ParamsDictionary } from "express-serve-static-core";
 
 // import custom libraries
 import tryCatch from "../utils/lib/try-catch.lib";
@@ -15,10 +17,11 @@ import { generateToken } from "../utils/helpers/jwt.helper";
 
 // import interfaces
 import { IUser } from "../@types";
-import { RegisterUserRequestBody, RegisterUserError } from "../@types";
+import { RegisterUserRequestBody, UserError } from "../@types";
 import { SuccessResponseData, ErrorResponseData } from "../@types";
 import { verifyEmailParams } from "../@types";
 import { SuccessResponseDataWithToken } from "../@types";
+import { GetUserProfileRequest } from "../@types";
 
 /**
  * @description Register a new user
@@ -51,7 +54,7 @@ export const registerUser = tryCatch(
       !password ||
       !confirmPassword
     ) {
-      const err: RegisterUserError = {
+      const err: UserError = {
         message: "All fields are required",
         statusCode: StatusCodes.BAD_REQUEST,
       };
@@ -61,7 +64,7 @@ export const registerUser = tryCatch(
     // Check if user already exist
     const user = await User.findOne({ email });
     if (user) {
-      const err: RegisterUserError = {
+      const err: UserError = {
         message: "User already exist",
         statusCode: StatusCodes.BAD_REQUEST,
       };
@@ -70,7 +73,7 @@ export const registerUser = tryCatch(
 
     // Check if password match
     if (password !== confirmPassword) {
-      const err: RegisterUserError = {
+      const err: UserError = {
         message: "Password does not match",
         statusCode: StatusCodes.BAD_REQUEST,
       };
@@ -194,7 +197,7 @@ export const verifyEmail = tryCatch(
 
     // Check if token and email is provided
     if (!token || !email) {
-      const err: RegisterUserError = {
+      const err: UserError = {
         message: "Token and email is required",
         statusCode: StatusCodes.BAD_REQUEST,
       };
@@ -206,7 +209,7 @@ export const verifyEmail = tryCatch(
 
     // Check if user exist
     if (!user) {
-      const err: RegisterUserError = {
+      const err: UserError = {
         message: "User does not exist",
         statusCode: StatusCodes.NOT_FOUND,
       };
@@ -215,7 +218,7 @@ export const verifyEmail = tryCatch(
 
     // Check if user is already verified
     if (user.verified) {
-      const err: RegisterUserError = {
+      const err: UserError = {
         message: "User is already verified",
         statusCode: StatusCodes.BAD_REQUEST,
       };
@@ -224,7 +227,7 @@ export const verifyEmail = tryCatch(
 
     // Check if verification token is valid
     if (user.verificationToken !== token) {
-      const err: RegisterUserError = {
+      const err: UserError = {
         message: "Invalid verification token",
         statusCode: StatusCodes.BAD_REQUEST,
       };
@@ -236,7 +239,7 @@ export const verifyEmail = tryCatch(
       user.verificationTokenExpire &&
       user.verificationTokenExpire < new Date()
     ) {
-      const err: RegisterUserError = {
+      const err: UserError = {
         message: "Verification token has expired",
         statusCode: StatusCodes.BAD_REQUEST,
       };
@@ -296,10 +299,6 @@ export const verifyEmail = tryCatch(
 
 type LoginUser = Request<unknown, unknown, RegisterUserRequestBody, unknown>;
 
-// type LoginUserResponse = Response<
-//   SuccessResponseDataWithToken<IUser> | ErrorResponseData
-// >;
-
 type LoginUserResponse = Response<
   | SuccessResponseDataWithToken<IUser>
   | ErrorResponseData
@@ -314,7 +313,7 @@ export const loginUser = tryCatch(
 
     // validate user inputs
     if (!email || !password) {
-      const err: RegisterUserError = {
+      const err: UserError = {
         message: "All fields are required",
         statusCode: StatusCodes.BAD_REQUEST,
       };
@@ -324,7 +323,7 @@ export const loginUser = tryCatch(
     // Check if user exist
     const user = await User.findOne({ email });
     if (!user) {
-      const err: RegisterUserError = {
+      const err: UserError = {
         message: "User does not exist",
         statusCode: StatusCodes.NOT_FOUND,
       };
@@ -333,7 +332,7 @@ export const loginUser = tryCatch(
 
     // Check if user is verified
     if (!user.verified) {
-      const err: RegisterUserError = {
+      const err: UserError = {
         message: "User is not verified",
         statusCode: StatusCodes.BAD_REQUEST,
       };
@@ -343,7 +342,7 @@ export const loginUser = tryCatch(
     // Check if password match
     const isMatch = await BcryptHelper.comparePassword(password, user.password);
     if (!isMatch) {
-      const err: RegisterUserError = {
+      const err: UserError = {
         message: "Invalid credentials",
         statusCode: StatusCodes.BAD_REQUEST,
       };
@@ -373,6 +372,55 @@ export const loginUser = tryCatch(
       res,
       "User logged in successfully",
       userResponse as unknown as IUser,
+      StatusCodes.OK
+    );
+  }
+);
+
+/**
+ * @description Get user profile
+ * @route GET /user/profile
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {JSON} message
+ * @returns {JSON} user
+ * @access Private
+ */
+
+type GetUserProfileResponse = Response<
+  SuccessResponseData<IUser> | ErrorResponseData
+>;
+
+type RequestObject = Request<
+  ParamsDictionary,
+  unknown,
+  unknown,
+  ParsedQs,
+  Record<string, unknown>
+>;
+
+export const getUserProfile = tryCatch(
+  async (req: RequestObject, res: GetUserProfileResponse) => {
+    // Get user id from request object
+    const userId = (req as unknown as GetUserProfileRequest).user;
+
+    // Find user by id
+    const user = await User.findOne({ _id: userId }).select("-password");
+
+    // Check if user exist
+    if (!user) {
+      const err: UserError = {
+        message: "User does not exist",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Return success response
+    return successResponse(
+      res,
+      "Profile fetched successfully",
+      user,
       StatusCodes.OK
     );
   }

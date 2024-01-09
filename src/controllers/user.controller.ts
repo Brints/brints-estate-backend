@@ -606,3 +606,102 @@ export const forgotPassword = tryCatch(
     );
   }
 );
+
+/**
+ * @description reset password
+ * @route POST /user/reset-password/:token/:email
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {JSON} message
+ * @returns {JSON} user
+ * @access Public
+ */
+
+export const resetPassword = tryCatch(
+  async (req: RequestObject, res: UserResponse) => {
+    // Get user input
+    const { token, email } = req.params;
+    const { password, confirmPassword } = req.body as {
+      password: string;
+      confirmPassword: string;
+    };
+
+    // validate user inputs
+    if (!token || !email || !password || !confirmPassword) {
+      const err: UserError = {
+        message: "All fields are required",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Check if user exist
+    const user = await User.findOne({ email });
+    if (!user) {
+      const err: UserError = {
+        message: "User does not exist",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Check if password match
+    if (password !== confirmPassword) {
+      const err: UserError = {
+        message: "Password does not match",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Check if reset password token is valid
+    if (user.resetPasswordToken !== token) {
+      const err: UserError = {
+        message: "Invalid reset password token",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Check if reset password token is expired
+    if (user.resetPasswordExpire && user.resetPasswordExpire < new Date()) {
+      const err: UserError = {
+        message: "Reset password token has expired",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // check if password is the same as the old password
+    const isOldPassword = await BcryptHelper.comparePassword(
+      password,
+      user.password
+    );
+    if (isOldPassword) {
+      const err: UserError = {
+        message: "Password cannot be the same as the old password",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Hash user password
+    const hashedPassword = await BcryptHelper.hashPassword(password);
+
+    // Set user password
+    user.password = hashedPassword;
+    user.resetPasswordToken = "";
+    user.resetPasswordExpire = null;
+
+    // Save user to database
+    await user.save();
+
+    // Return success response
+    return successResponse(
+      res,
+      "Password reset successfully. Login to continue",
+      {} as IUser,
+      StatusCodes.OK
+    );
+  }
+);

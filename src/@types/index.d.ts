@@ -9,6 +9,7 @@ declare interface IUser extends Document {
   phone: string;
   role: string;
   verified: boolean;
+  last_login?: Date | null;
   verificationToken: string;
   verificationTokenExpire: Date | null;
   resetPasswordToken?: string;
@@ -26,6 +27,7 @@ declare interface RegisterUserRequestBody {
   phone: string;
   role: string;
   verified: boolean;
+  last_login?: Date | null;
   verificationToken?: string;
   verificationTokenExpire?: Date | null;
   resetPasswordToken?: string;

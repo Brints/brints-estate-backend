@@ -32,9 +32,13 @@ declare interface RegisterUserRequestBody {
   resetPasswordExpire?: Date | null;
 }
 
-declare interface RegisterUserError {
+declare interface UserError {
   message: string;
   statusCode: number;
+}
+
+declare interface GetUserProfileRequest extends Request {
+  user: IUser;
 }
 
 declare interface SuccessResponseData<T> {
@@ -74,18 +78,21 @@ declare interface CustomParams {
   allowedFormats: string[];
 }
 
-// declare interface RequestBody {
-//   [key: string]: unknown;
-// }
+declare interface MailOptions {
+  from: string;
+  to: string;
+  subject: string;
+  html: string;
+}
 
-// declare interface RequestQuery {
-//   [key: string]: unknown;
-// }
+declare interface MailgunResponse {
+  id: string;
+  message: string;
+}
 
-// declare interface RequestParams {
-//   [key: string]: unknown;
-// }
-
-// declare interface RequestHeaders {
-//   [key: string]: unknown;
-// }
+declare interface MailgunData {
+  from: string;
+  to: string;
+  subject: string;
+  html: string;
+}

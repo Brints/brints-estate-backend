@@ -116,6 +116,8 @@ export const registerUser = tryCatch(
       phone,
       role,
       gender,
+      last_login: null,
+      verified: false,
       verificationToken,
       verificationTokenExpire,
       resetPasswordExpire,
@@ -162,6 +164,7 @@ export const registerUser = tryCatch(
       phone: newUser.phone,
       role: newUser.role,
       verified: newUser.verified,
+      last_login: newUser.last_login,
     };
 
     // Return success response
@@ -358,6 +361,9 @@ export const loginUser = tryCatch(
     // Set last login date
     user.last_login = new Date();
 
+    // Save user to database
+    await user.save();
+
     // Return user object with few details
     const userResponse = {
       image: user.image,
@@ -431,6 +437,107 @@ export const getUserProfile = tryCatch(
       res,
       "Profile fetched successfully",
       user,
+      StatusCodes.OK
+    );
+  }
+);
+
+/**
+ * @description generate new verification token
+ * @route POST /user/generate-verification-token
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {JSON} message
+ * @returns {JSON} user
+ * @access Public
+ */
+
+type GenerateVerificationTokenResponse = Response<
+  SuccessResponseData<IUser> | ErrorResponseData
+>;
+
+type GenerateVerificationTokenRequest = Request<
+  unknown,
+  unknown,
+  { email: string },
+  unknown
+>;
+
+export const generateNewVerificationToken = tryCatch(
+  async (
+    req: GenerateVerificationTokenRequest,
+    res: GenerateVerificationTokenResponse
+  ) => {
+    // Get user input
+    const { email } = req.body;
+
+    // validate user inputs
+    if (!email) {
+      const err: UserError = {
+        message: "Email is required",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Check if user exist
+    const user = await User.findOne({ email });
+    if (!user) {
+      const err: UserError = {
+        message: "User does not exist",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Check if user is verified
+    if (user.verified) {
+      const err: UserError = {
+        message: "User is already verified",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Generate verification token
+    const verificationToken = generateVerificationToken();
+
+    // Set verification token expire date to 3 hours
+    const verificationTokenExpire = new Date();
+    verificationTokenExpire.setHours(verificationTokenExpire.getHours() + 3);
+
+    // time verification token expires in hours
+    const expiration =
+      Math.round(
+        (verificationTokenExpire.getTime() - new Date().getTime()) / 3600000
+      ) + " hours";
+
+    // Set verification token and verification token expire date
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpire = verificationTokenExpire;
+
+    // Save user to database
+    await user.save();
+
+    // create verification url
+    const verificationUrl = `${process.env["BASE_URL"]}/user/verify-email/${verificationToken}/${user.email}`;
+
+    // Send verification email
+    await emailService.sendEmail(
+      user.email,
+      "New Verification Token",
+      `<h2>Hello, <span style="color: crimson">${
+        user.fullname.split(" ")[0]
+      }</span></h2>
+    <p>A new verification token has been generated for you. Please find the token in the link below. Verification link expires in ${expiration}</p>
+    <a href="${verificationUrl}" target="_blank" style="background-color: crimson; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Verify Email</a>`
+    );
+
+    // Return success response
+    return successResponse(
+      res,
+      "Verification token generated successfully",
+      {} as IUser,
       StatusCodes.OK
     );
   }

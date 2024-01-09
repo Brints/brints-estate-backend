@@ -21,7 +21,7 @@ import { RegisterUserRequestBody, UserError } from "../@types";
 import { SuccessResponseData, ErrorResponseData } from "../@types";
 import { verifyEmailParams } from "../@types";
 import { SuccessResponseDataWithToken } from "../@types";
-import { GetUserProfileRequest } from "../@types";
+import { UserObject } from "../@types";
 
 /**
  * @description Register a new user
@@ -398,7 +398,7 @@ type RequestObject = Request<
 export const getUserProfile = tryCatch(
   async (req: RequestObject, res: UserResponse) => {
     // Get user id from request object
-    const userId = (req as unknown as GetUserProfileRequest).user;
+    const userId = (req as unknown as UserObject).user;
 
     // Find user by id
     const user = await User.findOne({ _id: userId }).select({
@@ -700,6 +700,93 @@ export const resetPassword = tryCatch(
     return successResponse(
       res,
       "Password reset successfully. Login to continue",
+      {} as IUser,
+      StatusCodes.OK
+    );
+  }
+);
+
+/**
+ * @description change password
+ * @route POST /user/change-password
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {JSON} message
+ * @returns {JSON} user
+ * @access Private
+ */
+
+type ChangePasswordRequest = Request<
+  unknown,
+  unknown,
+  { oldPassword: string; newPassword: string; confirmPassword: string },
+  unknown
+>;
+
+export const changePassword = tryCatch(
+  async (req: ChangePasswordRequest, res: UserResponse) => {
+    // Get user input
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+
+    // validate user inputs
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      const err: UserError = {
+        message: "All fields are required",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Get user id from request object
+    const userId = (req as unknown as UserObject).user;
+
+    // Find user by id
+    const user = await User.findOne({ _id: userId });
+
+    // Check if user exist
+    if (!user) {
+      const err: UserError = {
+        message: "User does not exist",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Check if password match
+    if (newPassword !== confirmPassword) {
+      const err: UserError = {
+        message: "Password does not match",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // check if password is the same as the old password
+    const isOldPassword = await BcryptHelper.comparePassword(
+      newPassword,
+      user.password
+    );
+    if (isOldPassword) {
+      const err: UserError = {
+        message: "Password cannot be the same as the old password",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Hash user password
+    const hashedPassword = await BcryptHelper.hashPassword(newPassword);
+
+    // Set user password
+    user.password = hashedPassword;
+
+    // Save user to database
+    await user.save();
+
+    // Return success response
+    return successResponse(
+      res,
+      "Password changed successfully",
       {} as IUser,
       StatusCodes.OK
     );

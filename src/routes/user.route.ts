@@ -8,7 +8,7 @@ const upload = multerConfig.array("image", 5);
 import * as userController from "../controllers/user.controller";
 
 // middlewares
-// import * as userAuthorization from "../middlewares/authorization/user.authorization";
+import * as userAuthorization from "../middlewares/authorization/user.authorization";
 
 // validators
 import {
@@ -27,5 +27,10 @@ userRouter.post(
 );
 userRouter.get("/verify-email/:token/:email", userController.verifyEmail);
 userRouter.post("/login", userController.loginUser);
+userRouter.get(
+  "/profile",
+  userAuthorization.authenticatedUser,
+  userController.getUserProfile
+);
 
 export default userRouter;

@@ -267,21 +267,21 @@ export const verifyEmail = tryCatch(
     );
 
     // TODO: user details to be returned
-    const userResponse = {
-      image: user.image,
-      fullname: user.fullname,
-      email: user.email,
-      gender: user.gender,
-      phone: user.phone,
-      role: user.role,
-      verified: user.verified,
-    };
+    // const userResponse = {
+    //   image: user.image,
+    //   fullname: user.fullname,
+    //   email: user.email,
+    //   gender: user.gender,
+    //   phone: user.phone,
+    //   role: user.role,
+    //   verified: user.verified,
+    // };
 
     // Return success response
     return successResponse(
       res,
       "User verified successfully",
-      userResponse as IUser,
+      {} as IUser,
       StatusCodes.OK
     );
   }
@@ -405,7 +405,13 @@ export const getUserProfile = tryCatch(
     const userId = (req as unknown as GetUserProfileRequest).user;
 
     // Find user by id
-    const user = await User.findOne({ _id: userId }).select("-password");
+    const user = await User.findOne({ _id: userId }).select({
+      password: 0,
+      verificationToken: 0,
+      verificationTokenExpire: 0,
+      resetPasswordExpire: 0,
+      resetPasswordToken: 0,
+    });
 
     // Check if user exist
     if (!user) {

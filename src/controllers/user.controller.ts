@@ -792,3 +792,101 @@ export const changePassword = tryCatch(
     );
   }
 );
+
+/**
+ * @description update user profile
+ * @route PUT /user/profile
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {JSON} message
+ * @returns {JSON} user
+ * @access Private
+ */
+
+type UpdateUserProfileRequest = Request<unknown, unknown, IUser, unknown>;
+
+export const updateUserProfile = tryCatch(
+  async (req: UpdateUserProfileRequest, res: UserResponse) => {
+    // possible fields to update
+    const allowedFields: string[] = ["image", "fullname", "gender", "phone"];
+
+    // Get user id from request object
+    const userId = (req as unknown as UserObject).user;
+
+    // Find user by id
+    const user = await User.findOne({ _id: userId });
+    if (!user) {
+      const err: UserError = {
+        message: "User does not exist",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    console.log(user._id, userId._id);
+
+    // check if user is authenticated
+    if (user._id !== userId._id) {
+      const err: UserError = {
+        message: "You are not authorized to perform this action",
+        statusCode: StatusCodes.UNAUTHORIZED,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Get fields to update
+    const fieldsToUpdate = Object.keys(req.body);
+
+    // delete old images from cloudinary
+    if (req.body.image) {
+      const images = user.image as { url: string; filename: string }[];
+      await Promise.all(
+        images.map(async (image) => {
+          await cloudinary.uploader.destroy(image.filename);
+        })
+      );
+    }
+
+    // Upload new images to cloudinary
+    if (req.files) {
+      const images = req.files as Express.Multer.File[];
+      const imagesUrl = await Promise.all(
+        images.map(async (image) => {
+          const result = await cloudinary.uploader.upload(image.path);
+          return { url: result.secure_url, filename: result.public_id };
+        })
+      );
+      user.image = imagesUrl;
+    }
+
+    // Check if fields to update is allowed
+    const isValidOperation = fieldsToUpdate.every((field) =>
+      allowedFields.includes(field)
+    );
+
+    // Check if fields to update is valid
+    if (!isValidOperation) {
+      const err: UserError = {
+        message: "Invalid fields to update",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Update user fields
+    fieldsToUpdate.forEach((field) => {
+      user[field] = req.body[field];
+    });
+
+    // Save user to database
+    await user.save();
+
+    // Return success response
+    return successResponse(
+      res,
+      "Profile updated successfully",
+      user,
+      StatusCodes.OK
+    );
+  }
+);

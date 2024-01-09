@@ -16,7 +16,7 @@ import { cloudinary } from "../config/multer.config";
 import { generateToken } from "../utils/helpers/jwt.helper";
 
 // import interfaces
-import { IUser } from "../@types";
+import { IUser, UserResponse } from "../@types";
 import { RegisterUserRequestBody, UserError } from "../@types";
 import { SuccessResponseData, ErrorResponseData } from "../@types";
 import { verifyEmailParams } from "../@types";
@@ -35,12 +35,8 @@ import { GetUserProfileRequest } from "../@types";
 
 type RegisterUser = Request<unknown, unknown, RegisterUserRequestBody, unknown>;
 
-type RegisterUserResponse = Response<
-  SuccessResponseData<IUser> | ErrorResponseData
->;
-
 export const registerUser = tryCatch(
-  async (req: RegisterUser, res: RegisterUserResponse) => {
+  async (req: RegisterUser, res: UserResponse) => {
     // Get user input
     const { image, fullname, email, phone, gender, password, confirmPassword } =
       req.body;
@@ -139,8 +135,6 @@ export const registerUser = tryCatch(
     // Save user to database
     await newUser.save();
 
-    // /verify-email/:token&email=:email
-
     // create verification url
     const verificationUrl = `${process.env["BASE_URL"]}/user/verify-email/${verificationToken}/${newUser.email}`;
 
@@ -189,12 +183,8 @@ export const registerUser = tryCatch(
 
 type VerifyEmail = Request<unknown, unknown, verifyEmailParams, unknown>;
 
-type VerifyEmailResponse = Response<
-  SuccessResponseData<IUser> | ErrorResponseData
->;
-
 export const verifyEmail = tryCatch(
-  async (req: VerifyEmail, res: VerifyEmailResponse) => {
+  async (req: VerifyEmail, res: UserResponse) => {
     // Get token and email from request params
     const { token, email }: verifyEmailParams = req.params as verifyEmailParams;
 
@@ -397,10 +387,6 @@ export const loginUser = tryCatch(
  * @access Private
  */
 
-type GetUserProfileResponse = Response<
-  SuccessResponseData<IUser> | ErrorResponseData
->;
-
 type RequestObject = Request<
   ParamsDictionary,
   unknown,
@@ -410,7 +396,7 @@ type RequestObject = Request<
 >;
 
 export const getUserProfile = tryCatch(
-  async (req: RequestObject, res: GetUserProfileResponse) => {
+  async (req: RequestObject, res: UserResponse) => {
     // Get user id from request object
     const userId = (req as unknown as GetUserProfileRequest).user;
 
@@ -452,10 +438,6 @@ export const getUserProfile = tryCatch(
  * @access Public
  */
 
-type GenerateVerificationTokenResponse = Response<
-  SuccessResponseData<IUser> | ErrorResponseData
->;
-
 type GenerateVerificationTokenRequest = Request<
   unknown,
   unknown,
@@ -464,10 +446,7 @@ type GenerateVerificationTokenRequest = Request<
 >;
 
 export const generateNewVerificationToken = tryCatch(
-  async (
-    req: GenerateVerificationTokenRequest,
-    res: GenerateVerificationTokenResponse
-  ) => {
+  async (req: GenerateVerificationTokenRequest, res: UserResponse) => {
     // Get user input
     const { email } = req.body;
 
@@ -537,6 +516,91 @@ export const generateNewVerificationToken = tryCatch(
     return successResponse(
       res,
       "Verification token generated successfully",
+      {} as IUser,
+      StatusCodes.OK
+    );
+  }
+);
+
+/**
+ * @description forgot password
+ * @route POST /user/forgot-password
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {JSON} message
+ * @returns {JSON} user
+ * @access Public
+ */
+
+type ForgotPasswordRequest = Request<
+  unknown,
+  unknown,
+  { email: string },
+  unknown
+>;
+
+export const forgotPassword = tryCatch(
+  async (req: ForgotPasswordRequest, res: UserResponse) => {
+    // Get user input
+    const { email } = req.body;
+
+    // validate user inputs
+    if (!email) {
+      const err: UserError = {
+        message: "Email is required",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Check if user exist
+    const user = await User.findOne({ email });
+    if (!user) {
+      const err: UserError = {
+        message: "User does not exist",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Generate verification token
+    const resetPasswordToken = generateVerificationToken();
+
+    // Set verification token expire date to 3 hours
+    const resetPasswordExpire = new Date();
+    resetPasswordExpire.setHours(resetPasswordExpire.getHours() + 3);
+
+    // time verification token expires in hours
+    const expiration =
+      Math.round(
+        (resetPasswordExpire.getTime() - new Date().getTime()) / 3600000
+      ) + " hours";
+
+    // Set verification token and verification token expire date
+    user.resetPasswordToken = resetPasswordToken;
+    user.resetPasswordExpire = resetPasswordExpire;
+
+    // Save user to database
+    await user.save();
+
+    // create verification url
+    const resetPasswordUrl = `${process.env["BASE_URL"]}/user/reset-password/${resetPasswordToken}/${user.email}`;
+
+    // Send verification email
+    await emailService.sendEmail(
+      user.email,
+      "Reset Password",
+      `<h2>Hello, <span style="color: crimson">${
+        user.fullname.split(" ")[0]
+      }</span></h2>
+    <p>You requested to reset your password. Please click the link below to reset your password. Reset password link expires in ${expiration}</p>
+    <a href="${resetPasswordUrl}" target="_blank" style="background-color: crimson; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Reset Password</a>`
+    );
+
+    // Return success response
+    return successResponse(
+      res,
+      "Reset password link has been sent to your email",
       {} as IUser,
       StatusCodes.OK
     );

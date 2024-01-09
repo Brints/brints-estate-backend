@@ -53,8 +53,6 @@ export const authenticatedUser = async (
 
     const user = await User.findOne({ _id: payload["id"] });
 
-    console.log(user);
-
     // get user from database and attach to request object
     req.user = user as IUser;
     next();

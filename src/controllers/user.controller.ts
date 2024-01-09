@@ -355,6 +355,9 @@ export const loginUser = tryCatch(
       process.env["JWT_EXPIRES_IN"] as string
     );
 
+    // Set last login date
+    user.last_login = new Date();
+
     // Return user object with few details
     const userResponse = {
       image: user.image,
@@ -364,6 +367,7 @@ export const loginUser = tryCatch(
       phone: user.phone,
       role: user.role,
       verified: user.verified,
+      last_login: user.last_login,
       token,
     };
 

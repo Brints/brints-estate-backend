@@ -32,5 +32,11 @@ userRouter.get(
   userAuthorization.authenticatedUser,
   userController.getUserProfile
 );
+userRouter.put(
+  "/profile",
+  userAuthorization.authenticatedUser,
+  upload,
+  userController.updateUserProfile
+);
 
 export default userRouter;

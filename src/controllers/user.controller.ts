@@ -430,7 +430,7 @@ export const getUserProfile = tryCatch(
 
 /**
  * @description generate new verification token
- * @route POST /user/generate-verification-token
+ * @route POST /user/resend-verification-token
  * @param {Request} req
  * @param {Response} res
  * @returns {JSON} message

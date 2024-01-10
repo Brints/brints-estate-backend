@@ -944,3 +944,57 @@ export const addImageToUserProfile = tryCatch(
     );
   }
 );
+
+/**
+ * @description Delete user profile from database
+ * @route DELETE /user/profile
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {JSON} message
+ * @returns {JSON} user
+ * @access Private
+ */
+
+type DeleteUserProfileRequest = Request<unknown, unknown, unknown, unknown>;
+
+export const deleteUserProfile = tryCatch(
+  async (req: DeleteUserProfileRequest, res: UserResponse) => {
+    // Get user id from request object
+    const userId = (req as unknown as UserObject).user;
+
+    // Find user by id
+    const user = await User.findOne({ _id: userId });
+    if (!user) {
+      const err: UserError = {
+        message: "User does not exist",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // check if user is authenticated
+    if ((user._id as string).toString() !== (userId._id as string).toString()) {
+      const err: UserError = {
+        message: "You are not authorized to perform this action",
+        statusCode: StatusCodes.UNAUTHORIZED,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // delete user image from cloudinary
+    const images = user.image as { url: string; filename: string }[];
+    const imagesId = images.map((image) => image.filename);
+    await cloudinary.uploader.destroy(imagesId.join(","));
+
+    // delete user profile from database
+    await user.deleteOne();
+
+    // Return success response
+    return successResponse(
+      res,
+      "Profile deleted successfully",
+      {} as IUser,
+      StatusCodes.OK
+    );
+  }
+);

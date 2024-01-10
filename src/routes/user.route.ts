@@ -38,5 +38,27 @@ userRouter.put(
   upload,
   userController.updateUserProfile
 );
+userRouter.post(
+  "/resend-verification-token",
+  userController.generateNewVerificationToken
+);
+userRouter.post("/forgot-password", userController.forgotPassword);
+userRouter.post("/reset-password/:token/:email", userController.resetPassword);
+userRouter.post(
+  "/change-password",
+  userAuthorization.authenticatedUser,
+  userController.changePassword
+);
+userRouter.post(
+  "/profile/add-image",
+  userAuthorization.authenticatedUser,
+  upload,
+  userController.addImageToUserProfile
+);
+userRouter.delete(
+  "/profile/:userId",
+  userAuthorization.authenticatedUser,
+  userController.deleteUserProfile
+);
 
 export default userRouter;

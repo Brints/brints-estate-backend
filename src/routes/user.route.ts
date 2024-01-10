@@ -60,5 +60,15 @@ userRouter.delete(
   userAuthorization.authenticatedUser,
   userController.deleteUserProfile
 );
+userRouter.get(
+  "/all",
+  userAuthorization.authenticatedUser,
+  userController.getAllUsers
+);
+userRouter.get(
+  "/:id",
+  userAuthorization.authenticatedUser,
+  userController.getSingleUser
+);
 
 export default userRouter;

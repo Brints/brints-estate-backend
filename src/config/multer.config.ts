@@ -3,12 +3,8 @@ import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinaryConfig from "./cloudinary.config";
 import { CustomParams } from "../@types";
-
-/*
-process.env["CLOUDINARY_CLOUD_NAME"] as string,
-  process.env["CLOUDINARY_API_KEY"] as string,
-  process.env["CLOUDINARY_API_SECRET"] as string
-  */
+import * as dotenv from "dotenv";
+dotenv.config();
 
 const cloudinaryConfigOptions = cloudinaryConfig(
   process.env["CLOUDINARY_CLOUD_NAME"] as string,

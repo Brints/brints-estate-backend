@@ -998,3 +998,86 @@ export const deleteUserProfile = tryCatch(
     );
   }
 );
+
+/**
+ * @description Get all users
+ * @route GET /user/all
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {JSON} message
+ * @returns {JSON} users
+ * @access Private
+ */
+
+interface CustomRequest extends Request {
+  query: {
+    page?: string;
+    limit?: string;
+  };
+}
+
+type PartialUser = Partial<IUser>;
+
+interface PaginatedUsers {
+  total: number;
+  limit: number;
+  page: number;
+  pages: number;
+  docs: PartialUser[];
+}
+
+export const getAllUsers = tryCatch(
+  async (req: CustomRequest, res: UserResponse) => {
+    // Get user id from request object
+    const userId = (req as unknown as UserObject).user;
+
+    // Find user by id
+    const user = await User.findOne({ _id: userId });
+    if (!user) {
+      const err: UserError = {
+        message: "User does not exist",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // check if user is an admin
+    if (user.role !== "admin") {
+      const err: UserError = {
+        message: "You are not authorized to perform this action",
+        statusCode: StatusCodes.UNAUTHORIZED,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Get query params
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    // Get total documents
+    const total = await User.countDocuments();
+
+    // Get total pages
+    const pages = Math.ceil(total / limit);
+
+    // Get offset
+    const offset = limit * (page - 1);
+
+    // Get paginated users
+    const users: PaginatedUsers = {
+      total,
+      limit,
+      page,
+      pages,
+      docs: await User.find().skip(offset).limit(limit),
+    };
+
+    // Return success response
+    return successResponse(
+      res,
+      "Users fetched successfully",
+      users as unknown as IUser,
+      StatusCodes.OK
+    );
+  }
+);

@@ -823,10 +823,8 @@ export const updateUserProfile = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    console.log(user._id, userId._id);
-
     // check if user is authenticated
-    if (user._id !== userId._id) {
+    if ((user._id as string).toString() !== (userId._id as string).toString()) {
       const err: UserError = {
         message: "You are not authorized to perform this action",
         statusCode: StatusCodes.UNAUTHORIZED,
@@ -837,27 +835,22 @@ export const updateUserProfile = tryCatch(
     // Get fields to update
     const fieldsToUpdate = Object.keys(req.body);
 
-    // delete old images from cloudinary
-    if (req.body.image) {
-      const images = user.image as { url: string; filename: string }[];
-      await Promise.all(
-        images.map(async (image) => {
-          await cloudinary.uploader.destroy(image.filename);
-        })
-      );
+    //  if a user updates the image
+    // delete the old image first from cloudinary
+    // upload the new image
+    // save the new image url to the database
+    if (req.files) {
+      // delete old image from cloudinary
+      const oldImage = user.image as { url: string; filename: string }[];
+      const oldImageId = oldImage.map((image) => image.filename);
+      await cloudinary.uploader.destroy(oldImageId.join(","));
     }
 
-    // Upload new images to cloudinary
-    if (req.files) {
-      const images = req.files as Express.Multer.File[];
-      const imagesUrl = await Promise.all(
-        images.map(async (image) => {
-          const result = await cloudinary.uploader.upload(image.path);
-          return { url: result.secure_url, filename: result.public_id };
-        })
-      );
-      user.image = imagesUrl;
-    }
+    user.image = (req.files as Express.Multer.File[]).map(
+      (image: Express.Multer.File) => {
+        return { url: image.path, filename: image.filename };
+      }
+    );
 
     // Check if fields to update is allowed
     const isValidOperation = fieldsToUpdate.every((field) =>
@@ -885,6 +878,67 @@ export const updateUserProfile = tryCatch(
     return successResponse(
       res,
       "Profile updated successfully",
+      user,
+      StatusCodes.OK
+    );
+  }
+);
+
+/**
+ * @description Add image to user profile
+ * @route PUT /user/profile/add-image
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {JSON} message
+ * @returns {JSON} user
+ * @access Private
+ */
+
+type AddImageToUserProfileRequest = Request<unknown, unknown, unknown, unknown>;
+
+export const addImageToUserProfile = tryCatch(
+  async (req: AddImageToUserProfileRequest, res: UserResponse) => {
+    // Get user id from request object
+    const userId = (req as unknown as UserObject).user;
+
+    // Find user by id
+    const user = await User.findOne({ _id: userId });
+    if (!user) {
+      const err: UserError = {
+        message: "User does not exist",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // check if user is authenticated
+    if ((user._id as string).toString() !== (userId._id as string).toString()) {
+      const err: UserError = {
+        message: "You are not authorized to perform this action",
+        statusCode: StatusCodes.UNAUTHORIZED,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // add image to existing images
+    const images = user.image as { url: string; filename: string }[];
+    const newImages = (req.files as Express.Multer.File[]).map(
+      (image: Express.Multer.File) => {
+        return { url: image.path, filename: image.filename };
+      }
+    );
+    const updatedImages = [...images, ...newImages];
+
+    // save new images to database
+    user.image = updatedImages;
+
+    // Save user to database
+    await user.save();
+
+    // Return success response
+    return successResponse(
+      res,
+      "Image added successfully",
       user,
       StatusCodes.OK
     );

@@ -1081,3 +1081,59 @@ export const getAllUsers = tryCatch(
     );
   }
 );
+
+/**
+ * @description Get user by id (Single user)
+ * @route GET /user/:id
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {JSON} message
+ * @returns {JSON} user
+ * @access Private
+ */
+
+type GetSingleUser = Request<unknown, unknown, unknown, unknown>;
+
+export const getSingleUser = tryCatch(
+  async (req: GetSingleUser, res: UserResponse) => {
+    // Get user id from request object
+    const userId = (req as unknown as UserObject).user;
+
+    // Find user by id
+    const user = await User.findOne({ _id: userId });
+    if (!user) {
+      const err: UserError = {
+        message: "User does not exist",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Get user id from request params
+    const { id } = req.params as { id: string };
+
+    // Find user by id
+    const singleUser = await User.findOne({ _id: id }).select({
+      password: 0,
+      verificationToken: 0,
+      verificationTokenExpire: 0,
+      resetPasswordExpire: 0,
+      resetPasswordToken: 0,
+    });
+    if (!singleUser) {
+      const err: UserError = {
+        message: "User does not exist",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Return success response
+    return successResponse(
+      res,
+      "User fetched successfully",
+      singleUser,
+      StatusCodes.OK
+    );
+  }
+);

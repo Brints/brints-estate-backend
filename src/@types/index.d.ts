@@ -1,5 +1,7 @@
 import { Document } from "mongoose";
-// import { Request } from "express";
+import { Response } from "express";
+
+declare type ResponseData<T> = Response<T>;
 declare interface IUser extends Document {
   image?: { url: string; filename: string }[];
   fullname: string;
@@ -34,12 +36,16 @@ declare interface RegisterUserRequestBody {
   resetPasswordExpire?: Date | null;
 }
 
+declare type UserResponse = Response<
+  SuccessResponseData<IUser> | ErrorResponseData
+>;
+
 declare interface UserError {
   message: string;
   statusCode: number;
 }
 
-declare interface GetUserProfileRequest extends Request {
+declare interface UserObject extends Request {
   user: IUser;
 }
 

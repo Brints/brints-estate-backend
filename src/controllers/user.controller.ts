@@ -14,6 +14,7 @@ import { emailService } from "../services/email.service";
 import {
   registerEmailTemplate,
   verifyEmailTemplate,
+  generateNewVerificationTokenTemplate,
 } from "../services/email-templates.service";
 import { CapitalizeFirstLetter } from "../utils/helpers/user.helper";
 import { cloudinary } from "../config/multer.config";
@@ -460,12 +461,6 @@ export const generateNewVerificationToken = tryCatch(
     const verificationTokenExpire = new Date();
     verificationTokenExpire.setHours(verificationTokenExpire.getHours() + 3);
 
-    // time verification token expires in hours
-    const expiration =
-      Math.round(
-        (verificationTokenExpire.getTime() - new Date().getTime()) / 3600000
-      ) + " hours";
-
     // Set verification token and verification token expire date
     user.verificationToken = verificationToken;
     user.verificationTokenExpire = verificationTokenExpire;
@@ -473,19 +468,8 @@ export const generateNewVerificationToken = tryCatch(
     // Save user to database
     await user.save();
 
-    // create verification url
-    const verificationUrl = `${process.env["BASE_URL"]}/user/verify-email/${verificationToken}/${user.email}`;
-
     // Send verification email
-    await emailService.sendEmail(
-      user.email,
-      "New Verification Token",
-      `<h2>Hello, <span style="color: crimson">${
-        user.fullname.split(" ")[0]
-      }</span></h2>
-    <p>A new verification token has been generated for you. Please find the token in the link below. Verification link expires in ${expiration}</p>
-    <a href="${verificationUrl}" target="_blank" style="background-color: crimson; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Verify Email</a>`
-    );
+    await generateNewVerificationTokenTemplate(user);
 
     // Return success response
     return successResponse(

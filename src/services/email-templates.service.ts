@@ -26,7 +26,7 @@ export const verifyEmailTemplate = async (user: IUser) => {
   const subject = "Welcome to Brints Estate";
   const html = `<h2>Dear, <span style="color: crimson">${
     fullname.split(" ")[0]
-  }</span></h2>
+  } 😍</span></h2>
   <p>Welcome aboard! We're thrilled to have you as a part of Brints Estate. Your registration was successful, and you're now officially a member of our community.</p>
   <p>Here are a few things to get you started:</p>
   <ul>
@@ -41,6 +41,6 @@ export const verifyEmailTemplate = async (user: IUser) => {
   <p>If you have any questions or need assistance, our support team is here to help. Just reply to this email, and we'll get back to you promptly.</p>
   <p>Once again, welcome to [Your Platform]! We're excited to have you on board.</p>
   <p>Best regards,</p>
-  <p>The Brints Estate Team</p>`;
+  <p>The Brints Estate Team ❤</p>`;
   await emailService.sendEmail(email, subject, html);
 };

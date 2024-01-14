@@ -19,3 +19,28 @@ export const registerEmailTemplate = async (user: IUser) => {
       <a href="${verificationUrl}" target="_blank" style="background-color: crimson; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Verify Email</a>`;
   await emailService.sendEmail(email, subject, html);
 };
+
+// Verify email template
+export const verifyEmailTemplate = async (user: IUser) => {
+  const { email, fullname } = user;
+  const subject = "Welcome to Brints Estate";
+  const html = `<h2>Dear, <span style="color: crimson">${
+    fullname.split(" ")[0]
+  }</span></h2>
+  <p>Welcome aboard! We're thrilled to have you as a part of Brints Estate. Your registration was successful, and you're now officially a member of our community.</p>
+  <p>Here are a few things to get you started:</p>
+  <ul>
+    <li><strong>Explore Your Dashboard:</strong> Log in to your account and take a tour of your dashboard. This is your personalized space where you can manage your profile, settings, and activities.</li>
+    <li>Explore our <a href="${
+      process.env["BASE_URL"]
+    }" target="_blank">website</a> to find your dream home.</li>
+    <li>Check out our <a href="${
+      process.env["BASE_URL"]
+    }/properties" target="_blank">listings</a> to find your dream home.</li>
+  </ul>
+  <p>If you have any questions or need assistance, our support team is here to help. Just reply to this email, and we'll get back to you promptly.</p>
+  <p>Once again, welcome to [Your Platform]! We're excited to have you on board.</p>
+  <p>Best regards,</p>
+  <p>The Brints Estate Team</p>`;
+  await emailService.sendEmail(email, subject, html);
+};

@@ -11,7 +11,10 @@ import { User } from "../models/user.model";
 import BcryptHelper from "../utils/helpers/bcrypt.helper";
 import { generateVerificationToken } from "../utils/lib/verification-token.lib";
 import { emailService } from "../services/email.service";
-import { registerEmailTemplate } from "../services/email-templates.service";
+import {
+  registerEmailTemplate,
+  verifyEmailTemplate,
+} from "../services/email-templates.service";
 import { CapitalizeFirstLetter } from "../utils/helpers/user.helper";
 import { cloudinary } from "../config/multer.config";
 import { generateToken } from "../utils/helpers/jwt.helper";
@@ -240,25 +243,7 @@ export const verifyEmail = tryCatch(
     await user.save();
 
     // TODO: Send welcome email
-    await emailService.sendEmail(
-      user.email,
-      "Welcome to Brints Estate",
-      `<h2>Hello, <span style="color: crimson">${
-        user.fullname.split(" ")[0]
-      }</span></h2>
-      <p>Thanks for joining Brints Estate. We are glad to have you here.</p>`
-    );
-
-    // TODO: user details to be returned
-    // const userResponse = {
-    //   image: user.image,
-    //   fullname: user.fullname,
-    //   email: user.email,
-    //   gender: user.gender,
-    //   phone: user.phone,
-    //   role: user.role,
-    //   verified: user.verified,
-    // };
+    await verifyEmailTemplate(user);
 
     // Return success response
     return successResponse(

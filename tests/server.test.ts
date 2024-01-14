@@ -1,4 +1,3 @@
-// import * as request from 'supertest'
 import { SuperTest, Test, agent as requestAgent } from "supertest";
 import app from "../src/app";
 import { StatusCodes } from "http-status-codes";

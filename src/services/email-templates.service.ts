@@ -44,3 +44,29 @@ export const verifyEmailTemplate = async (user: IUser) => {
   <p>The Brints Estate Team ❤</p>`;
   await emailService.sendEmail(email, subject, html);
 };
+
+// Generate New Verification Token Email Template
+export const generateNewVerificationTokenTemplate = async (user: IUser) => {
+  const { email, fullname, verificationToken, verificationTokenExpire } = user;
+
+  // set verification url
+  const verificationUrl = `${process.env["BASE_URL"]}/user/verify-email/${verificationToken}/${email}`;
+
+  // time verification token expires
+  const expiration =
+    Math.round(
+      ((verificationTokenExpire as Date).getTime() - new Date().getTime()) /
+        3600000
+    ) + " hours";
+
+  // email subject and html
+  const subject = "New Verification Token";
+  const html = `<h2>Hello, <span style="color: crimson">${
+    fullname.split(" ")[0]
+  }</span></h2>
+    <p>A new verification token has been generated for you. Please find the token in the link below. Verification link expires in ${expiration}</p>
+    <a href="${verificationUrl}" target="_blank" style="background-color: crimson; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Verify Email</a>`;
+
+  // send email
+  await emailService.sendEmail(email, subject, html);
+};

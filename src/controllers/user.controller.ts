@@ -136,20 +136,6 @@ export const registerUser = tryCatch(
     // Save user to database
     await newUser.save();
 
-    // create verification url
-    // const verificationUrl = `${process.env["BASE_URL"]}/user/verify-email/${verificationToken}/${newUser.email}`;
-
-    // Send verification email
-    // await emailService.sendEmail(
-    //   newUser.email,
-    //   "Verify your email",
-    //   `<h2>Hello, <span style="color: crimson">${
-    //     newUser.fullname.split(" ")[0]
-    //   }</span></h2>
-    //   <p>Thanks for creating an account with us. Please click the link below to verify your email address. Verification link expires in ${expiration}</p>
-    //   <a href="${verificationUrl}" target="_blank" style="background-color: crimson; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Verify Email</a>`
-    // );
-
     // Send verification email
     await registerEmailTemplate(newUser);
 

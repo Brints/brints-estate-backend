@@ -11,6 +11,7 @@ import { User } from "../models/user.model";
 import BcryptHelper from "../utils/helpers/bcrypt.helper";
 import { generateVerificationToken } from "../utils/lib/verification-token.lib";
 import { emailService } from "../services/email.service";
+import { registerEmailTemplate } from "../services/email-templates.service";
 import { CapitalizeFirstLetter } from "../utils/helpers/user.helper";
 import { cloudinary } from "../config/multer.config";
 import { generateToken } from "../utils/helpers/jwt.helper";
@@ -95,10 +96,10 @@ export const registerUser = tryCatch(
     verificationTokenExpire.setHours(verificationTokenExpire.getHours() + 3);
 
     // time verification token expires in hours
-    const expiration =
-      Math.round(
-        (verificationTokenExpire.getTime() - new Date().getTime()) / 3600000
-      ) + " hours";
+    // const expiration =
+    //   Math.round(
+    //     (verificationTokenExpire.getTime() - new Date().getTime()) / 3600000
+    //   ) + " hours";
 
     const resetPasswordExpire = null;
     const resetPasswordToken = "";
@@ -136,18 +137,21 @@ export const registerUser = tryCatch(
     await newUser.save();
 
     // create verification url
-    const verificationUrl = `${process.env["BASE_URL"]}/user/verify-email/${verificationToken}/${newUser.email}`;
+    // const verificationUrl = `${process.env["BASE_URL"]}/user/verify-email/${verificationToken}/${newUser.email}`;
 
     // Send verification email
-    await emailService.sendEmail(
-      newUser.email,
-      "Verify your email",
-      `<h2>Hello, <span style="color: crimson">${
-        newUser.fullname.split(" ")[0]
-      }</span></h2>
-      <p>Thanks for creating an account with us. Please click the link below to verify your email address. Verification link expires in ${expiration}</p>
-      <a href="${verificationUrl}" target="_blank" style="background-color: crimson; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Verify Email</a>`
-    );
+    // await emailService.sendEmail(
+    //   newUser.email,
+    //   "Verify your email",
+    //   `<h2>Hello, <span style="color: crimson">${
+    //     newUser.fullname.split(" ")[0]
+    //   }</span></h2>
+    //   <p>Thanks for creating an account with us. Please click the link below to verify your email address. Verification link expires in ${expiration}</p>
+    //   <a href="${verificationUrl}" target="_blank" style="background-color: crimson; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Verify Email</a>`
+    // );
+
+    // Send verification email
+    await registerEmailTemplate(newUser);
 
     // Return user object with few details
     const userResponse = {
@@ -164,7 +168,7 @@ export const registerUser = tryCatch(
     // Return success response
     return successResponse(
       res,
-      "User registered successfully",
+      "Success! Please check your email to verify your account.",
       userResponse as IUser,
       StatusCodes.CREATED
     );
@@ -273,7 +277,7 @@ export const verifyEmail = tryCatch(
     // Return success response
     return successResponse(
       res,
-      "User verified successfully",
+      "Success! Your email has been verified. Please login with your email & password.",
       {} as IUser,
       StatusCodes.OK
     );

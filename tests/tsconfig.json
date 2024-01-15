@@ -2,7 +2,7 @@
   "extends": "../tsconfig.json",
   "references": [{ "name": "brints-estate-backend", "path": ".." }],
   "compilerOptions": {
-    "types": ["jest"],
+    "types": ["node", "jest"],
     "rootDir": ".."
   },
   "include": ["."]

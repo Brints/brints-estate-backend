@@ -343,6 +343,12 @@ export const loginUser = tryCatch(
       token,
     };
 
+    // destruct user object
+    // const {
+    //   password: userPassword,
+    //   ...userResponse
+    // } = user["_doc"] as IUser;
+
     // Return success response
     return successResponse(
       res,
@@ -350,6 +356,11 @@ export const loginUser = tryCatch(
       userResponse as unknown as IUser,
       StatusCodes.OK
     );
+
+    // res.cookie("access_token", token, {
+    //   httpOnly: true,
+    //   maxAge: 1000 * 60 * 60 * 24, // 1 day or 24 hours
+    // });
   }
 );
 

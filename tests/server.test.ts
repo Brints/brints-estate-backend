@@ -1,13 +1,24 @@
-import { SuperTest, Test, agent as requestAgent } from "supertest";
-import app from "../src/app";
-import { StatusCodes } from "http-status-codes";
-import { describe, it, expect } from "@jest/globals";
+// server.test.ts
+import { Server } from "node:http";
+import { server, startServer } from "../src/server";
 
-// This is a test for the server, not the database
-describe("Server Test", () => {
-  it("should respond with 200 status for GET /", async () => {
-    const testRequest = requestAgent(app) as unknown as SuperTest<Test>;
-    const response = await testRequest.get("/");
-    expect(response.statusCode).toBe(StatusCodes.OK);
+describe("Server", () => {
+  let consoleLogSpy: jest.SpyInstance;
+
+  beforeAll(() => {
+    consoleLogSpy = jest.spyOn(console, "log").mockImplementation();
+  });
+
+  afterAll(() => {
+    consoleLogSpy.mockRestore();
+  });
+
+  it("should start server successfully", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    await startServer();
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      "🚀 Server started successfully on port " + process.env["PORT"] || 1234
+    );
+    (server as Server).close();
   });
 });

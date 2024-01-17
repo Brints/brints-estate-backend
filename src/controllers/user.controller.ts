@@ -81,6 +81,34 @@ export const registerUser = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
+    // check if password is the same as email
+    if (password === email) {
+      const err: UserError = {
+        message: "Password cannot be the same as email",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // check if password includes any part of the fullname
+    const fullnameArray = fullname.split(" ");
+    if (fullnameArray.some((name) => password.includes(name))) {
+      const err: UserError = {
+        message: "Password cannot include your name",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // check if password is the same as fullname
+    if (password === fullname) {
+      const err: UserError = {
+        message: "Password cannot be the same as your name",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
     // Capitalize first letter of fullname
     const capitalizedFullname =
       CapitalizeFirstLetter.capitalizeFirstLetter(fullname);

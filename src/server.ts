@@ -13,10 +13,10 @@ import connectDB from "./database/connect.database";
 app.set("port", port);
 
 // configure the server
-const server: http.Server = http.createServer(app);
+export const server: http.Server = http.createServer(app);
 
 // function to connect to database and start server
-const startServer = async () => {
+export const startServer = async (): Promise<void> => {
   try {
     // connect to database
     await connectDB();

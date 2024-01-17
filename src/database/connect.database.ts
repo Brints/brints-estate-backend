@@ -9,12 +9,13 @@ const connectDB = async (): Promise<void> => {
     console.log(`🟢 Database connected successfully: ${connection.host}`);
   } catch (error: unknown) {
     console.log("🔴 Database connection failed");
-    // if (error instanceof Error) {
-    //   console.error(error.message);
-    // } else {
-    //   console.error("Unknown error");
-    // }
   }
 };
 
 export default connectDB;
+
+// if (error instanceof Error) {
+//   console.error(error.message);
+// } else {
+//   console.error("Unknown error");
+// }

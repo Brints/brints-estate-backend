@@ -43,8 +43,15 @@ type RegisterUser = Request<unknown, unknown, RegisterUserRequestBody, unknown>;
 export const registerUser = tryCatch(
   async (req: RegisterUser, res: UserResponse) => {
     // Get user input
-    const { image, fullname, email, phone, gender, password, confirmPassword } =
-      req.body;
+    const {
+      avatar,
+      fullname,
+      email,
+      phone,
+      gender,
+      password,
+      confirmPassword,
+    } = req.body;
 
     // validate user inputs
     if (
@@ -136,9 +143,24 @@ export const registerUser = tryCatch(
     const resetPasswordExpire = null;
     const resetPasswordToken = "";
 
+    const defaultAvatar: { url: string; filename: string }[] = [];
+
+    // set default avatar based on gender
+    if (!avatar && gender === "female") {
+      defaultAvatar.push({
+        url: "https://e7.pngegg.com/pngimages/961/57/png-clipart-computer-icons-icon-design-apple-icon-format-female-avatar-desktop-wallpaper-silhouette-thumbnail.png",
+        filename: "female avatar",
+      });
+    } else {
+      defaultAvatar.push({
+        url: "https://w7.pngwing.com/pngs/831/88/png-transparent-user-profile-computer-icons-user-interface-mystique-miscellaneous-user-interface-design-smile-thumbnail.png",
+        filename: "male avatar",
+      });
+    }
+
     // Create user
     const newUser: IUser = new User({
-      image,
+      avatar: avatar ? avatar : defaultAvatar,
       fullname: capitalizedFullname,
       email,
       password: hashedPassword,
@@ -162,7 +184,7 @@ export const registerUser = tryCatch(
           return { url: result.secure_url, filename: result.public_id };
         })
       );
-      newUser.image = imagesUrl;
+      newUser.avatar = imagesUrl;
     }
 
     // Save user to database
@@ -173,7 +195,7 @@ export const registerUser = tryCatch(
 
     // Return user object with few details
     const userResponse = {
-      image: newUser.image,
+      avatar: newUser.avatar,
       fullname: newUser.fullname,
       email: newUser.email,
       gender: newUser.gender,
@@ -190,6 +212,135 @@ export const registerUser = tryCatch(
       userResponse as IUser,
       StatusCodes.CREATED
     );
+  }
+);
+
+/**
+ * @description Google sign up
+ * @route POST /user/google-signup
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {JSON} message
+ * @returns {JSON} user
+ * @access Public
+ */
+
+type GoogleSignUp = Request<unknown, unknown, unknown, unknown>;
+
+export const googleSignUp = tryCatch(
+  async (req: GoogleSignUp, res: UserResponse) => {
+    const { email } = req.body as { email: string };
+
+    // check if the user exists, login the user
+    const user = await User.findOne({ email });
+
+    if (user) {
+      // generate the token
+      const token = generateToken(
+        { id: user._id },
+        process.env["JWT_EXPIRES_IN"] as string
+      );
+
+      if (user.avatar && user.avatar.length === 0 && user.gender === "female") {
+        user.avatar.push({
+          url: "https://e7.pngegg.com/pngimages/961/57/png-clipart-computer-icons-icon-design-apple-icon-format-female-avatar-desktop-wallpaper-silhouette-thumbnail.png",
+          filename: "female avatar",
+        });
+      } else if (
+        user.avatar &&
+        user.avatar.length === 0 &&
+        user.gender === "male"
+      ) {
+        user.avatar.push({
+          url: "https://w7.pngwing.com/pngs/831/88/png-transparent-user-profile-computer-icons-user-interface-mystique-miscellaneous-user-interface-design-smile-thumbnail.png",
+          filename: "male avatar",
+        });
+      }
+
+      // set last login date
+      user.last_login = new Date();
+
+      // save user to database
+      await user.save();
+
+      // return user object with few details
+      const userResponse = {
+        avatar: user.avatar,
+        fullname: user.fullname,
+        email: user.email,
+        gender: user.gender,
+        phone: user.phone,
+        role: user.role,
+        verified: user.verified,
+        last_login: user.last_login,
+        token,
+      };
+
+      // return success response
+      return successResponse(
+        res,
+        "User logged in successfully",
+        userResponse as unknown as IUser,
+        StatusCodes.OK
+      );
+    } else {
+      const { avatar, fullname, email } = req.body as {
+        avatar: string;
+        fullname: string;
+        email: string;
+      };
+
+      // generate random strong password
+      const randomPassword = Math.random().toString(36).slice(-10);
+
+      // hash user password
+      const hashedPassword = await BcryptHelper.hashPassword(randomPassword);
+
+      // make user an admin if it is the first user
+      const users = await User.find();
+      const role = users.length === 0 ? "admin" : "user";
+
+      const defaultAvatar: { url: string; filename: string }[] = [];
+      defaultAvatar.push({
+        url: avatar,
+        filename: "google avatar",
+      });
+
+      // set default gender
+      const gender = "male";
+
+      // set default phone number
+      const phone = "00000000000";
+
+      // set verified to true
+      const verified = true;
+
+      // create new user
+      const newUser: IUser = new User({
+        avatar: defaultAvatar,
+        fullname,
+        email,
+        password: hashedPassword,
+        role,
+        gender,
+        phone,
+        verified,
+      });
+
+      // save user to database
+      await newUser.save();
+
+      // send welcome email
+      // await registerEmailTemplate(newUser);
+
+      // return success response
+      return successResponse(
+        res,
+        "Success! Please check your email to verify your account.",
+        {} as IUser,
+        StatusCodes.CREATED
+      );
+    }
   }
 );
 
@@ -360,7 +511,7 @@ export const loginUser = tryCatch(
 
     // Return user object with few details
     const userResponse = {
-      image: user.image,
+      avatar: user.avatar,
       fullname: user.fullname,
       email: user.email,
       gender: user.gender,
@@ -839,12 +990,12 @@ export const updateUserProfile = tryCatch(
     // save the new image url to the database
     if (req.files) {
       // delete old image from cloudinary
-      const oldImage = user.image as { url: string; filename: string }[];
+      const oldImage = user.avatar as { url: string; filename: string }[];
       const oldImageId = oldImage.map((image) => image.filename);
       await cloudinary.uploader.destroy(oldImageId.join(","));
     }
 
-    user.image = (req.files as Express.Multer.File[]).map(
+    user.avatar = (req.files as Express.Multer.File[]).map(
       (image: Express.Multer.File) => {
         return { url: image.path, filename: image.filename };
       }
@@ -919,7 +1070,7 @@ export const addImageToUserProfile = tryCatch(
     }
 
     // add image to existing images
-    const images = user.image as { url: string; filename: string }[];
+    const images = user.avatar as { url: string; filename: string }[];
     const newImages = (req.files as Express.Multer.File[]).map(
       (image: Express.Multer.File) => {
         return { url: image.path, filename: image.filename };
@@ -928,7 +1079,7 @@ export const addImageToUserProfile = tryCatch(
     const updatedImages = [...images, ...newImages];
 
     // save new images to database
-    user.image = updatedImages;
+    user.avatar = updatedImages;
 
     // Save user to database
     await user.save();
@@ -980,7 +1131,7 @@ export const deleteUserProfile = tryCatch(
     }
 
     // delete user image from cloudinary
-    const images = user.image as { url: string; filename: string }[];
+    const images = user.avatar as { url: string; filename: string }[];
     const imagesId = images.map((image) => image.filename);
     await cloudinary.uploader.destroy(imagesId.join(","));
 

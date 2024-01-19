@@ -3,7 +3,7 @@ import { Response } from "express";
 
 declare type ResponseData<T> = Response<T>;
 declare interface IUser extends Document {
-  image?: { url: string; filename: string }[];
+  avatar?: { url: string; filename: string }[];
   fullname: string;
   email: string;
   password: string;
@@ -20,7 +20,7 @@ declare interface IUser extends Document {
 }
 
 declare interface RegisterUserRequestBody {
-  image?: { url: string; filename: string }[];
+  avatar?: { url: string; filename: string }[];
   fullname: string;
   email: string;
   password: string;

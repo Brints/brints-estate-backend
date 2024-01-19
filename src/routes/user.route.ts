@@ -2,7 +2,7 @@
 import { Router } from "express";
 import { multerConfig } from "../config/multer.config";
 
-const upload = multerConfig.array("image", 5);
+const upload = multerConfig.array("avatar", 5);
 
 // controllers
 import * as userController from "../controllers/user.controller";
@@ -25,6 +25,7 @@ userRouter.post(
   validateUserRegistration,
   userController.registerUser
 );
+userRouter.post("/google-signup", userController.googleSignUp);
 userRouter.get("/verify-email/:token/:email", userController.verifyEmail);
 userRouter.post("/login", userController.loginUser);
 userRouter.get(

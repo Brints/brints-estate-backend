@@ -260,6 +260,11 @@ export const googleSignUp = tryCatch(
       // set last login date
       user.last_login = new Date();
 
+      // format fullname
+      user.fullname = CapitalizeFirstLetter.capitalizeFirstLetter(
+        user.fullname
+      );
+
       // save user to database
       await user.save();
 
@@ -295,6 +300,9 @@ export const googleSignUp = tryCatch(
 
       // hash user password
       const hashedPassword = await BcryptHelper.hashPassword(randomPassword);
+
+      // format fullname
+      CapitalizeFirstLetter.capitalizeFirstLetter(fullname);
 
       // make user an admin if it is the first user
       const users = await User.find();
@@ -957,7 +965,7 @@ type UpdateUserProfileRequest = Request<unknown, unknown, IUser, unknown>;
 export const updateUserProfile = tryCatch(
   async (req: UpdateUserProfileRequest, res: UserResponse) => {
     // possible fields to update
-    const allowedFields: string[] = ["image", "fullname", "gender", "phone"];
+    const allowedFields: string[] = ["avatar", "fullname", "gender", "phone"];
 
     // Get user id from request object
     const userId = (req as unknown as UserObject).user;

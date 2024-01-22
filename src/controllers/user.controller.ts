@@ -964,13 +964,14 @@ type UpdateUserProfileRequest = Request<unknown, unknown, IUser, unknown>;
 
 export const updateUserProfile = tryCatch(
   async (req: UpdateUserProfileRequest, res: UserResponse) => {
-    // possible fields to update
-    // const allowedFields: string[] = ["avatar", "fullname", "gender", "phone"];
-
     const { avatar, fullname, gender, phone } = req.body;
 
+    // Capitalize first letter of fullname
     const uppercaseFullname =
       CapitalizeFirstLetter.capitalizeFirstLetter(fullname);
+
+    // validate user inputs
+    gender.toLowerCase();
 
     // Get user id from request object
     const userId = (req as unknown as UserObject).user;
@@ -993,9 +994,6 @@ export const updateUserProfile = tryCatch(
       };
       return errorResponse(res, err.message, err.statusCode);
     }
-
-    // Get fields to update
-    // const fieldsToUpdate = Object.keys(req.body);
 
     //  if a user updates the image, delete the old image first from cloudinary
     // then upload the new image and save the new image url to the database
@@ -1020,25 +1018,7 @@ export const updateUserProfile = tryCatch(
       await user.save();
     }
 
-    // Check if fields to update is allowed
-    // const isValidOperation = fieldsToUpdate.every((field) =>
-    //   allowedFields.includes(field)
-    // );
-
-    // Check if fields to update is valid
-    // if (!isValidOperation) {
-    //   const err: UserError = {
-    //     message: "Invalid fields to update",
-    //     statusCode: StatusCodes.BAD_REQUEST,
-    //   };
-    //   return errorResponse(res, err.message, err.statusCode);
-    // }
-
-    // Update user fields
-    // fieldsToUpdate.forEach((field) => {
-    //   user[field] = req.body[field];
-    // });
-
+    // update user profile
     const updatedUser = await User.findByIdAndUpdate(
       userId._id,
       {
@@ -1051,9 +1031,6 @@ export const updateUserProfile = tryCatch(
       },
       { new: true }
     );
-
-    // Save user to database
-    // await user.save();
 
     // Return success response
     return successResponse(

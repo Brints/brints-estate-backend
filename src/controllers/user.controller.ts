@@ -965,7 +965,9 @@ type UpdateUserProfileRequest = Request<unknown, unknown, IUser, unknown>;
 export const updateUserProfile = tryCatch(
   async (req: UpdateUserProfileRequest, res: UserResponse) => {
     // possible fields to update
-    const allowedFields: string[] = ["avatar", "fullname", "gender", "phone"];
+    // const allowedFields: string[] = ["avatar", "fullname", "gender", "phone"];
+
+    const { avatar, fullname, gender, phone } = req.body;
 
     // Get user id from request object
     const userId = (req as unknown as UserObject).user;
@@ -990,52 +992,71 @@ export const updateUserProfile = tryCatch(
     }
 
     // Get fields to update
-    const fieldsToUpdate = Object.keys(req.body);
+    // const fieldsToUpdate = Object.keys(req.body);
 
-    //  if a user updates the image
-    // delete the old image first from cloudinary
-    // upload the new image
-    // save the new image url to the database
+    //  if a user updates the image, delete the old image first from cloudinary
+    // then upload the new image and save the new image url to the database
     if (req.files) {
       // delete old image from cloudinary
       const oldImage = user.avatar as { url: string; filename: string }[];
       const oldImageId = oldImage.map((image) => image.filename);
       await cloudinary.uploader.destroy(oldImageId.join(","));
-    }
 
-    user.avatar = (req.files as Express.Multer.File[]).map(
-      (image: Express.Multer.File) => {
-        return { url: image.path, filename: image.filename };
-      }
-    );
+      // upload new image to cloudinary
+      const images = req.files as Express.Multer.File[];
+      const imagesUrl = await Promise.all(
+        images.map(async (image) => {
+          const result = await cloudinary.uploader.upload(image.path);
+          return { url: result.secure_url, filename: result.public_id };
+        })
+      );
+      user.avatar = imagesUrl;
+
+      console.log(user.avatar);
+
+      await user.save();
+    }
 
     // Check if fields to update is allowed
-    const isValidOperation = fieldsToUpdate.every((field) =>
-      allowedFields.includes(field)
-    );
+    // const isValidOperation = fieldsToUpdate.every((field) =>
+    //   allowedFields.includes(field)
+    // );
 
     // Check if fields to update is valid
-    if (!isValidOperation) {
-      const err: UserError = {
-        message: "Invalid fields to update",
-        statusCode: StatusCodes.BAD_REQUEST,
-      };
-      return errorResponse(res, err.message, err.statusCode);
-    }
+    // if (!isValidOperation) {
+    //   const err: UserError = {
+    //     message: "Invalid fields to update",
+    //     statusCode: StatusCodes.BAD_REQUEST,
+    //   };
+    //   return errorResponse(res, err.message, err.statusCode);
+    // }
 
     // Update user fields
-    fieldsToUpdate.forEach((field) => {
-      user[field] = req.body[field];
-    });
+    // fieldsToUpdate.forEach((field) => {
+    //   user[field] = req.body[field];
+    // });
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId._id,
+      {
+        $set: {
+          avatar,
+          fullname,
+          gender,
+          phone,
+        },
+      },
+      { new: true }
+    );
 
     // Save user to database
-    await user.save();
+    // await user.save();
 
     // Return success response
     return successResponse(
       res,
       "Profile updated successfully",
-      user,
+      updatedUser as IUser,
       StatusCodes.OK
     );
   }

@@ -969,6 +969,8 @@ export const updateUserProfile = tryCatch(
 
     const { avatar, fullname, gender, phone } = req.body;
 
+    CapitalizeFirstLetter.capitalizeFirstLetter(fullname);
+
     // Get user id from request object
     const userId = (req as unknown as UserObject).user;
 

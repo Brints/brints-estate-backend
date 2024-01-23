@@ -54,3 +54,4 @@ These instructions will get you a copy of the project up and running on your loc
 - [Heroku](https://www.heroku.com/) - Cloud Application Platform.
 
 ## Authors
+[Aniebiet Afia](https://linkedin.com/in/aniebietafia)

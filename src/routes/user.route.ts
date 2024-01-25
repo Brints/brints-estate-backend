@@ -71,5 +71,10 @@ userRouter.get(
   userAuthorization.authenticatedUser,
   userController.getSingleUser
 );
+userRouter.put(
+  "/:id/make-admin",
+  userAuthorization.authenticatedUser,
+  userController.makeUserAdmin
+);
 
 export default userRouter;

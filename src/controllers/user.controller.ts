@@ -1128,7 +1128,10 @@ export const deleteUserProfile = tryCatch(
     }
 
     // check if user is authenticated
-    if ((user._id as string).toString() !== (userId._id as string).toString()) {
+    if (
+      (user._id as string).toString() !== (userId._id as string).toString() ||
+      user.role !== "admin"
+    ) {
       const err: UserError = {
         message: "You are not authorized to perform this action",
         statusCode: StatusCodes.UNAUTHORIZED,

@@ -134,12 +134,6 @@ export const registerUser = tryCatch(
     const verificationTokenExpire = new Date();
     verificationTokenExpire.setHours(verificationTokenExpire.getHours() + 3);
 
-    // time verification token expires in hours
-    // const expiration =
-    //   Math.round(
-    //     (verificationTokenExpire.getTime() - new Date().getTime()) / 3600000
-    //   ) + " hours";
-
     const resetPasswordExpire = null;
     const resetPasswordToken = "";
 
@@ -192,6 +186,8 @@ export const registerUser = tryCatch(
 
     // Send verification email
     await registerEmailTemplate(newUser);
+
+    // delete newUser.password
 
     // Return user object with few details
     const userResponse = {
@@ -530,24 +526,17 @@ export const loginUser = tryCatch(
       token,
     };
 
-    // destruct user object
-    // const {
-    //   password: userPassword,
-    //   ...userResponse
-    // } = user["_doc"] as IUser;
+    // destructure user object
+    // const { password: userPwd, ...userProps } = user["_doc"] as IUser;
 
     // Return success response
     return successResponse(
       res,
       "User logged in successfully",
       userResponse as unknown as IUser,
+      // { userProps, token } as unknown as IUser,
       StatusCodes.OK
     );
-
-    // res.cookie("access_token", token, {
-    //   httpOnly: true,
-    //   maxAge: 1000 * 60 * 60 * 24, // 1 day or 24 hours
-    // });
   }
 );
 
@@ -964,7 +953,7 @@ type UpdateUserProfileRequest = Request<unknown, unknown, IUser, unknown>;
 
 export const updateUserProfile = tryCatch(
   async (req: UpdateUserProfileRequest, res: UserResponse) => {
-    const { avatar, fullname, gender, phone } = req.body;
+    const { avatar, fullname, gender, phone, role } = req.body;
 
     // Capitalize first letter of fullname
     const uppercaseFullname =
@@ -1013,9 +1002,16 @@ export const updateUserProfile = tryCatch(
       );
       user.avatar = imagesUrl;
 
-      console.log(user.avatar);
-
       await user.save();
+    }
+
+    // if user attempts to update role to admin, return error
+    if (role === "admin") {
+      const err: UserError = {
+        message: "You cannot make yourself an admin. Contact the admin",
+        statusCode: StatusCodes.UNAUTHORIZED,
+      };
+      return errorResponse(res, err.message, err.statusCode);
     }
 
     // update user profile
@@ -1027,6 +1023,7 @@ export const updateUserProfile = tryCatch(
           fullname: uppercaseFullname,
           gender,
           phone,
+          role,
         },
       },
       { new: true }
@@ -1035,7 +1032,7 @@ export const updateUserProfile = tryCatch(
     // Return success response
     return successResponse(
       res,
-      "Profile updated successfully",
+      "Profile updated successfully.",
       updatedUser as IUser,
       StatusCodes.OK
     );

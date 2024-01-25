@@ -1295,3 +1295,64 @@ export const getSingleUser = tryCatch(
     );
   }
 );
+
+/**
+ * @description Admin update the role of another user to admin
+ * @route PUT /user/:id/make-admin
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {JSON} message
+ * @returns {JSON} user object
+ * @access Private
+ */
+
+type MakeUserAdmin = Request<unknown, unknown, unknown, unknown>;
+
+export const makeUserAdmin = tryCatch(
+  async (req: MakeUserAdmin, res: UserResponse) => {
+    // Get user id from request object
+    const userId = (req as unknown as UserObject).user;
+
+    // Find user by id
+    const user = await User.findOne({ _id: userId });
+    if (!user && (user as unknown as IUser).role !== "admin") {
+      const err: UserError = {
+        message: "You are not authorized to perform this action",
+        statusCode: StatusCodes.UNAUTHORIZED,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // Get user id from request params
+    const { id } = req.params as { id: string };
+
+    // Find user by id
+    const singleUser = await User.findOne({ _id: id });
+    if (!singleUser) {
+      const err: UserError = {
+        message: "User does not exist",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // update user role
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          role: "admin",
+        },
+      },
+      { new: true }
+    );
+
+    // Return success response
+    return successResponse(
+      res,
+      "User role updated successfully",
+      updatedUser as IUser,
+      StatusCodes.OK
+    );
+  }
+);

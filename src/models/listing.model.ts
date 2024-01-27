@@ -7,7 +7,7 @@ const listingSchema: Schema = new Schema(
     title: { type: String, required: true, trim: true },
     description: { type: String, required: true },
     price: { type: Number, required: true },
-    discount: { type: Number },
+    discount: { type: Number, default: 0 },
     location: { type: String, required: true, trim: true },
     address: { type: String, required: true, trim: true },
     city: { type: String, required: true, trim: true },
@@ -28,6 +28,7 @@ const listingSchema: Schema = new Schema(
     bathroom: { type: Number, required: true },
     amenities: [{ type: String }],
     images: [{ url: String, filename: String }],
+    owner: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );

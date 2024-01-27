@@ -18,7 +18,7 @@ import {
   ListingResponse,
   RegisterListingRequestBody,
 } from "../@types/listing";
-import { SuccessResponseData, ErrorResponseData } from "../@types/listing";
+import { SuccessResponseData } from "../@types/listing";
 
 /**
  * @desc    Create new listing

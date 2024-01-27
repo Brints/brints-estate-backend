@@ -87,6 +87,20 @@ export const createListing = tryCatch(
       return errorResponse(res, error.message, error.statusCode);
     }
 
+    // check if the user is a user
+    if (userId.role === "user") {
+      const error: ListingError = {
+        message:
+          "You are cannot create a listing. Upgrade to an agent/landlord account",
+        statusCode: StatusCodes.UNAUTHORIZED,
+      };
+      return errorResponse(res, error.message, error.statusCode);
+    }
+
+    // convert the amenities string to array
+    const amenitiesArray = amenities.split(",");
+    const formattedAmenities = amenitiesArray.map((amenity) => amenity.trim());
+
     // create new listing
     const listing = await Listing.create({
       title,
@@ -103,7 +117,7 @@ export const createListing = tryCatch(
       type,
       bedroom,
       bathroom,
-      amenities,
+      amenities: formattedAmenities,
       images,
       owner: userId._id,
     });

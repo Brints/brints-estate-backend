@@ -1,165 +1,139 @@
 // import libraries
-import { Request, Response } from "express";
+import { Request } from "express";
 import { StatusCodes } from "http-status-codes";
-import { ParsedQs } from "qs";
-import { ParamsDictionary } from "express-serve-static-core";
+// import { ParsedQs } from "qs";
+// import { ParamsDictionary } from "express-serve-static-core";
 
 // import custom libraries
 import tryCatch from "../utils/lib/try-catch.lib";
 import { successResponse, errorResponse } from "../utils/lib/response.lib";
+import { UserObject } from "../@types";
 import { Listing } from "../models/listing.model";
-import cloudinary from "../config/multer.config";
+import { cloudinary } from "../config/multer.config";
 
 // import types
 import {
   IListing,
   ListingError,
-  ListingObject,
   ListingResponse,
   RegisterListingRequestBody,
 } from "../@types/listing";
-import { ErrorResponseData, SuccessResponseData } from "../@types/listing";
+import { SuccessResponseData, ErrorResponseData } from "../@types/listing";
 
 /**
- * @desc    class for listing controller
- * @class   ListingController
- * @public
- * @constructor
- * @param   {Request<ParamsDictionary, unknown, RegisterListingRequestBody, ParsedQs, Record<string, unknown>>} req
- * @param   {Response<SuccessResponseData<IListing> | ErrorResponseData>} res
- * @returns {void}
+ * @desc    Create new listing
+ * @route   POST /api/listing/create
+ * @access  Private
+ * @param   {Request<ParamsDictionary, unknown, RegisterListingRequestBody>} req
+ * @param   {ListingResponse} res
+ * @returns {Promise<ListingResponse | void>}
+ * @throws  {Error}
+ * @todo    {Handle image upload}
  */
 
-export class ListingController {
-  /**
-   * @desc  method for creating a listing
-   * @route POST /api/v1/listing
-   * @access  Private
-   * @param   {Request<ParamsDictionary, unknown, RegisterListingRequestBody, ParsedQs, Record<string, unknown>>} req
-   * @param   {Response<SuccessResponseData<IListing> | ErrorResponseData>} res
-   * @returns {void}
-   */
-  static createListing = tryCatch(
-    async (
-      req: Request<
-        ParamsDictionary,
-        unknown,
-        RegisterListingRequestBody,
-        ParsedQs,
-        Record<string, unknown>
-      >,
-      res: ListingResponse
-    ): Promise<void> => {
-      const {
-        title,
-        description,
-        price,
-        discount,
-        location,
-        address,
-        city,
-        state,
-        country,
-        zipcode,
-        status,
-        type,
-        bedroom,
-        bathroom,
-        amenities,
-        images,
-      } = req.body;
+type CreateListingRequest = Request<
+  unknown,
+  unknown,
+  RegisterListingRequestBody,
+  unknown
+>;
 
-      const listing: IListing = await Listing.create({
-        title,
-        description,
-        price,
-        discount,
-        location,
-        address,
-        city,
-        state,
-        country,
-        zipcode,
-        status,
-        type,
-        bedroom,
-        bathroom,
-        amenities,
-        images,
+export const createListing = tryCatch(
+  async (req: CreateListingRequest, res: ListingResponse) => {
+    // destructure request body
+    const {
+      title,
+      description,
+      price,
+      discount,
+      location,
+      address,
+      city,
+      state,
+      country,
+      zipcode,
+      status,
+      type,
+      bedroom,
+      bathroom,
+      amenities,
+      images,
+    } = req.body;
+
+    // fetch the user from request object
+    const userId = (req as unknown as UserObject).user;
+
+    // validate request body
+    if (
+      !title ||
+      !description ||
+      !price ||
+      !location ||
+      !address ||
+      !city ||
+      !state ||
+      !country ||
+      !status ||
+      !type ||
+      !bedroom ||
+      !bathroom ||
+      !amenities ||
+      !images
+    ) {
+      const error: ListingError = {
+        message: "Please fill in all fields",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, error.message, error.statusCode);
+    }
+
+    // create new listing
+    const listing = await Listing.create({
+      title,
+      description,
+      price,
+      discount,
+      location,
+      address,
+      city,
+      state,
+      country,
+      zipcode,
+      status,
+      type,
+      bedroom,
+      bathroom,
+      amenities,
+      images,
+      owner: userId._id,
+    });
+
+    // upload images to cloudinary
+    if (req.files) {
+      //   const { images } = req.files as { images: Express.Multer.File[] };
+      const images = req.files as Express.Multer.File[];
+      const uploadImages = images.map(async (image) => {
+        const result = await cloudinary.uploader.upload(image.path);
+        return { url: result.secure_url, filename: result.public_id };
       });
-
-      successResponse(
-        res,
-        "Listing created successfully",
-        listing,
-        StatusCodes.CREATED
-      );
+      listing.images = await Promise.all(uploadImages);
     }
-  );
 
-  /**
-   * @desc  method for getting all listings
-   * @route GET /api/v1/listing
-   * @access  Public
-   * @param   {Request<ParamsDictionary, unknown, unknown, ParsedQs, Record<string, unknown>>} req
-   * @param   {Response<SuccessResponseData<IListing[]> | ErrorResponseData>} res
-   * @returns {void}
-   */
-  static getAllListings = tryCatch(
-    async (
-      _req: Request<
-        ParamsDictionary,
-        unknown,
-        unknown,
-        ParsedQs,
-        Record<string, unknown>
-      >,
-      res: ListingResponse
-    ): Promise<void> => {
-      const listings: IListing[] = await Listing.find();
+    // save listing
+    await listing.save();
 
-      successResponse(
-        res,
-        "Listings fetched successfully",
-        listings,
-        StatusCodes.OK
-      );
-    }
-  );
-}
-
-//   /**
-//    * @desc  method for getting a listing
-//    * @route GET /api/v1/listing/:id
-//    * @access  Public
-//    * @param   {Request<ParamsDictionary, unknown, unknown, ParsedQs, Record<string, unknown>>} req
-//    * @param   {Response<SuccessResponseData<IListing> | ErrorResponseData>} res
-//    * @returns {void}
-//    * @todo    add error handling for invalid id
-//    * @todo    add error handling for listing not found
-//    * @todo    add error handling for invalid id
-//    * @todo    add error handling for listing not found
-// * /
-
-//     static getListing = tryCatch(
-//         async (
-//         req: Request<ParamsDictionary, unknown, unknown, ParsedQs, Record<string, unknown>>,
-//         res: ListingResponse
-//         ): Promise<void> => {
-//         const listing: IListing = await Listing.findById(req.params.id);
-
-//         successResponse(res, "Listing fetched successfully", listing, StatusCodes.OK);
-//         }
-//     );
-
-//     /**
-//      * @desc  method for updating a listing
-//      * @route PUT /api/v1/listing/:id
-//      * @access  Private
-//      * @param   {Request<ParamsDictionary, unknown, RegisterListingRequestBody, ParsedQs, Record<string, unknown>>} req
-//      * @param   {Response<SuccessResponseData<IListing> | ErrorResponseData>} res
-//      * @returns {void}
-//      * @todo    add error handling for invalid id
-//      * @todo    add error handling for listing not found
-//      * @todo    add error handling for invalid id
-//      * @todo    add error handling for listing not found
+    // return success response
+    const data: IListing = listing;
+    const success: SuccessResponseData<IListing> = {
+      message: "Listing created successfully",
+      data,
+      statusCode: StatusCodes.CREATED,
+    };
+    return successResponse(
+      res,
+      success.message,
+      success.data,
+      success.statusCode
+    );
+  }
+);

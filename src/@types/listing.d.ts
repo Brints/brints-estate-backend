@@ -38,7 +38,7 @@ declare interface RegisterListingRequestBody {
   type: string;
   bedroom: number;
   bathroom: number;
-  amenities: string[];
+  amenities: string;
   images: { url: string; filename: string }[];
 }
 

@@ -49,8 +49,12 @@ declare interface SuccessResponseData<T> {
 }
 
 declare interface ErrorResponseData {
-  message: string;
-  statusCode: number;
+  success: boolean;
+  error: {
+    type: string;
+    message: string;
+    statusCode: number;
+  };
 }
 
 declare type ListingResponse = Response<

@@ -39,19 +39,17 @@ type CreateListingRequest = Request<
 >;
 
 export const createListing = tryCatch(
-  async (req: CreateListingRequest, res: ListingResponse) => {
+  async (req: CreateListingRequest, res: ListingResponse): Promise<unknown> => {
     // destructure request body
     const {
       title,
       description,
       price,
       discount,
-      location,
       address,
       city,
       state,
       country,
-      zipcode,
       status,
       type,
       bedroom,
@@ -68,7 +66,6 @@ export const createListing = tryCatch(
       !title ||
       !description ||
       !price ||
-      !location ||
       !address ||
       !city ||
       !state ||
@@ -107,12 +104,10 @@ export const createListing = tryCatch(
       description,
       price,
       discount,
-      location,
       address,
       city,
       state,
       country,
-      zipcode,
       status,
       type,
       bedroom,

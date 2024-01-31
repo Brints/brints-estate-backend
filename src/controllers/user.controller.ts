@@ -1209,8 +1209,8 @@ export const getAllUsers = tryCatch(
     }
 
     // Get query params
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const page = Number(req.query.page as string) || 1;
+    const limit = Number(req.query.limit as string) || 10;
 
     // Get total documents
     const total = await User.countDocuments();

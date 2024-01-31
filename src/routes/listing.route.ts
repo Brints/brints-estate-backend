@@ -21,5 +21,10 @@ listingRouter.post(
   userAuthorization.authenticatedUser,
   listingController.createListing
 );
+listingRouter.get(
+  "/all",
+  userAuthorization.authenticatedUser,
+  listingController.getAllListings
+);
 
 export default listingRouter;

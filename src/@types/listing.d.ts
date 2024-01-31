@@ -1,5 +1,7 @@
 import { Document } from "mongoose";
 import { Response } from "express";
+// import { ParsedQs } from "qs";
+// import { ParamsDictionary } from "express-serve-static-core";
 
 declare type ResponseData<T> = Response<T>;
 
@@ -67,3 +69,11 @@ declare interface ListingError {
 declare interface ListingObject extends Request {
   listing: IListing;
 }
+
+// declare type RequestObject = Request<
+//   ParamsDictionary,
+//   unknown,
+//   unknown,
+//   ParsedQs,
+//   Record<string, unknown>
+// >;

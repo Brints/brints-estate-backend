@@ -1,8 +1,8 @@
 // import libraries
 import { Request } from "express";
 import { StatusCodes } from "http-status-codes";
-// import { ParsedQs } from "qs";
-// import { ParamsDictionary } from "express-serve-static-core";
+import { ParsedQs } from "qs";
+import { ParamsDictionary } from "express-serve-static-core";
 
 // import custom libraries
 import tryCatch from "../utils/lib/try-catch.lib";
@@ -10,6 +10,8 @@ import { successResponse, errorResponse } from "../utils/lib/response.lib";
 import { UserObject } from "../@types";
 import { Listing } from "../models/listing.model";
 import { cloudinary } from "../config/multer.config";
+import { CapitalizeFirstLetter } from "../utils/helpers/user.helper";
+import { ListingHelper } from "../utils/helpers/user.helper";
 
 // import types
 import {
@@ -22,7 +24,7 @@ import { SuccessResponseData } from "../@types/listing";
 
 /**
  * @desc    Create new listing
- * @route   POST /api/listing/create
+ * @route   POST /listings/create
  * @access  Private
  * @param   {Request<ParamsDictionary, unknown, RegisterListingRequestBody>} req
  * @param   {ListingResponse} res
@@ -61,6 +63,11 @@ export const createListing = tryCatch(
     // fetch the user from request object
     const userId = (req as unknown as UserObject).user;
 
+    // set status to rent if not provided and type to apartment if not provided
+    // if (!status) {
+    //   status = "rent";
+    // }
+
     // validate request body
     if (
       !title ||
@@ -98,16 +105,34 @@ export const createListing = tryCatch(
     const amenitiesArray = amenities.split(",");
     const formattedAmenities = amenitiesArray.map((amenity) => amenity.trim());
 
+    // capitalize the first letter of the state and city
+    const formattedState = CapitalizeFirstLetter.capitalizeFirstLetter(state);
+    const formattedCity = CapitalizeFirstLetter.capitalizeFirstLetter(city);
+    const formattedCountry =
+      CapitalizeFirstLetter.capitalizeFirstLetter(country);
+    const formattedTitle = CapitalizeFirstLetter.capitalizeFirstLetter(title);
+
+    // check if the description is more than 160 characters
+    const descriptionLength =
+      ListingHelper.descriptionNotMoreThan160Characters(description);
+    if (descriptionLength > 160) {
+      const error: ListingError = {
+        message: "Description cannot be more than 160 characters",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, error.message, error.statusCode);
+    }
+
     // create new listing
     const listing = await Listing.create({
-      title,
+      title: formattedTitle,
       description,
       price,
       discount,
       address,
-      city,
-      state,
-      country,
+      city: formattedCity,
+      state: formattedState,
+      country: formattedCountry,
       status,
       type,
       bedroom,
@@ -116,6 +141,9 @@ export const createListing = tryCatch(
       images,
       owner: userId._id,
     });
+
+    CapitalizeFirstLetter.capitalizeFirstLetter(type);
+    CapitalizeFirstLetter.capitalizeFirstLetter(status);
 
     // upload images to cloudinary
     if (req.files) {
@@ -143,6 +171,103 @@ export const createListing = tryCatch(
       success.message,
       success.data,
       success.statusCode
+    );
+  }
+);
+
+/**
+ * @description Get All Listings by Pagination
+ * @route GET /listings/all
+ * @access Private
+ * @param {Request<ParamsDictionary, unknown, unknown, ParsedQs>} req
+ * @param {ListingResponse} res
+ * @returns {Promise<ListingResponse | void>}
+ * @throws {Error}
+ */
+
+type RequestObject = Request<
+  ParamsDictionary,
+  unknown,
+  unknown,
+  ParsedQs,
+  Record<string, unknown>
+>;
+
+export const getAllListings = tryCatch(
+  async (req: RequestObject, res: ListingResponse): Promise<unknown> => {
+    // destructure request query
+    // const { page, limit } = req.query as Record<string, unknown>;
+    // const { page, limit } = req.query as { page: string; limit: string };
+    const { page, limit } = req.query;
+
+    // set default values for page and limit
+    const pageNumber = page ? Number(page) : 1;
+    const limitNumber = limit ? Number(limit) : 10;
+
+    // check if user is logged in
+    const userId = (req as unknown as UserObject).user;
+    if (!userId) {
+      const error: ListingError = {
+        message: "Please login to view listings",
+        statusCode: StatusCodes.UNAUTHORIZED,
+      };
+      return errorResponse(res, error.message, error.statusCode);
+    }
+
+    // fetch all listings
+    const listings = await Listing.find()
+      .populate("owner", "-password")
+      .sort({ createdAt: -1 })
+      .limit(limitNumber)
+      .skip(limitNumber * (pageNumber - 1));
+
+    // return success response
+    const success: SuccessResponseData<IListing> = {
+      message: "Listings fetched successfully",
+      data: listings as unknown as IListing,
+      statusCode: StatusCodes.OK,
+    };
+    return successResponse(
+      res,
+      success.message,
+      success.data,
+      success.statusCode
+    );
+  }
+);
+
+/**
+ * @description Get Single Listing
+ * @route GET /listing/:listingId
+ * @access Private
+ * @param {Request<ParamsDictionary, unknown, unknown, ParsedQs>} req
+ * @param {ListingResponse} res
+ * @returns {Promise<ListingResponse | void>}
+ * @throws {Error}
+ */
+
+export const getSingleListing = tryCatch(
+  async (req: RequestObject, res: ListingResponse): Promise<unknown> => {
+    // destructure the id from the params
+    const { listingId } = req.params;
+
+    // check if listing exists
+    if (!listingId) {
+      const error: ListingError = {
+        message: "Listing does not exist.",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, error.message, error.statusCode);
+    }
+
+    // Fetch Listing
+    const listing = await Listing.findOne({ _id: listingId });
+
+    return successResponse(
+      res,
+      "Successful",
+      listing as IListing,
+      StatusCodes.OK
     );
   }
 );

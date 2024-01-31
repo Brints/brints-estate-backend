@@ -9,3 +9,11 @@ export class CapitalizeFirstLetter {
       .join(" ");
   }
 }
+
+export class ListingHelper {
+  static descriptionNotMoreThan160Characters(description: string): number {
+    description = description.split(" ").join("");
+
+    return description.length;
+  }
+}

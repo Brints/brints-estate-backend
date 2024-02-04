@@ -271,3 +271,7 @@ export const getSingleListing = tryCatch(
     );
   }
 );
+
+/**
+ * @description Search for listings matching keyword
+ */

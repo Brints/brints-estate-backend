@@ -280,3 +280,37 @@ export const getSingleListing = tryCatch(
  * @returns {Promise<ListingResponse | void>}
  * @throws {Error}
  */
+
+export const searchListings = tryCatch(
+  async (req: RequestObject, res: ListingResponse): Promise<unknown> => {
+    // destructure the keyword from the query
+    const { keyword } = req.query;
+
+    // check if keyword is provided
+    if (!keyword) {
+      const error: ListingError = {
+        message: "Please provide a keyword",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, error.message, error.statusCode);
+    }
+
+    // search for listings
+    const listings = await Listing.find({
+      $text: { $search: keyword as string },
+    });
+
+    // return success response
+    const success: SuccessResponseData<IListing> = {
+      message: "Listings fetched successfully",
+      data: listings as unknown as IListing,
+      statusCode: StatusCodes.OK,
+    };
+    return successResponse(
+      res,
+      success.message,
+      success.data,
+      success.statusCode
+    );
+  }
+);

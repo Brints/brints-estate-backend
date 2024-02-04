@@ -274,4 +274,9 @@ export const getSingleListing = tryCatch(
 
 /**
  * @description Search for listings matching keyword
+ * @route GET /listings/search
+ * @param {Request<ParamsDictionary, unknown, unknown, ParsedQs>} req
+ * @param {ListingResponse} res
+ * @returns {Promise<ListingResponse | void>}
+ * @throws {Error}
  */

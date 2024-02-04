@@ -297,7 +297,7 @@ export const searchListings = tryCatch(
 
     // search for listings
     const listings = await Listing.find({
-      $text: { $search: keyword as string },
+      $text: { $search: keyword as string, $caseSensitive: false },
     });
 
     // return success response

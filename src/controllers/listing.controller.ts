@@ -123,6 +123,8 @@ export const createListing = tryCatch(
       return errorResponse(res, error.message, error.statusCode);
     }
 
+    const owner = userId._id as string;
+
     // create new listing
     const listing = await Listing.create({
       title: formattedTitle,
@@ -139,7 +141,7 @@ export const createListing = tryCatch(
       bathroom,
       amenities: formattedAmenities,
       images,
-      owner: userId._id,
+      owner,
     });
 
     CapitalizeFirstLetter.capitalizeFirstLetter(type);
@@ -326,7 +328,9 @@ export const searchListings = tryCatch(
  */
 
 export const updateListing = tryCatch(
-  async (req: CreateListingRequest, res: ListingResponse): Promise<unknown> => {
+  async (req: RequestObject, res: ListingResponse): Promise<unknown> => {
+    const { listingId } = req.params;
+
     // destructure request body
     const {
       title,
@@ -343,51 +347,32 @@ export const updateListing = tryCatch(
       bathroom,
       amenities,
       images,
-    } = req.body;
+    } = req.body as RegisterListingRequestBody;
 
     // fetch the user from request object
     const userId = (req as unknown as UserObject).user;
 
-    // set status to rent if not provided and type to apartment if not provided
-    // if (!status) {
-    //   status = "rent";
-    // }
-
-    // validate request body
-    if (
-      !title ||
-      !description ||
-      !price ||
-      !address ||
-      !city ||
-      !state ||
-      !country ||
-      !status ||
-      !type ||
-      !bedroom ||
-      !bathroom ||
-      !amenities ||
-      !images
-    ) {
+    // check if listing exists
+    const listing = await Listing.findOne({ _id: listingId });
+    if (!listing) {
       const error: ListingError = {
-        message: "Please fill in all fields",
-        statusCode: StatusCodes.BAD_REQUEST,
-      };
-      return errorResponse(res, error.message, error.statusCode);
-    }
-
-    // check if the user is a user
-    if (userId.role === "user") {
-      const error: ListingError = {
-        message:
-          "You are cannot create a listing. Upgrade to an agent/landlord account",
-        statusCode: StatusCodes.UNAUTHORIZED,
+        message: "Listing does not exist.",
+        statusCode: StatusCodes.NOT_FOUND,
       };
       return errorResponse(res, error.message, error.statusCode);
     }
 
     // convert the amenities string to array
-    const amenitiesArray = amenities.split(",");
+    const amenitiesArray: string[] = amenities.split(",");
+
+    // check if the user is the owner of the listing
+    if (userId._id !== listing.owner.toString()) {
+      const error: ListingError = {
+        message: "You are not authorized to update this listing",
+        statusCode: StatusCodes.UNAUTHORIZED,
+      };
+      return errorResponse(res, error.message, error.statusCode);
+    }
     const formattedAmenities = amenitiesArray.map((amenity) => amenity.trim());
 
     // capitalize the first letter of the state and city
@@ -408,47 +393,38 @@ export const updateListing = tryCatch(
       return errorResponse(res, error.message, error.statusCode);
     }
 
-    // create new listing
-    const listing = await Listing.create({
-      title: formattedTitle,
-      description,
-      price,
-      discount,
-      address,
-      city: formattedCity,
-      state: formattedState,
-      country: formattedCountry,
-      status,
-      type,
-      bedroom,
-      bathroom,
-      amenities: formattedAmenities,
-      images,
-      owner: userId._id,
-    });
+    // update listing
+    const updatedListing = await Listing.findByIdAndUpdate(
+      { _id: listingId },
+      {
+        title: formattedTitle,
+        description,
+        price,
+        discount,
+        address,
+        city: formattedCity,
+        state: formattedState,
+        country: formattedCountry,
+        status,
+        type,
+        bedroom,
+        bathroom,
+        amenities: formattedAmenities,
+        images,
+      },
+      { new: true }
+    );
 
     CapitalizeFirstLetter.capitalizeFirstLetter(type);
 
     // upload images to cloudinary
-    if (req.files) {
-      //   const { images } = req.files as { images: Express.Multer.File[] };
-      const images = req.files as Express.Multer.File[];
-      const uploadImages = images.map(async (image) => {
-        const result = await cloudinary.uploader.upload(image.path);
-        return { url: result.secure_url, filename: result.public_id };
-      });
-      listing.images = await Promise.all(uploadImages);
-    }
-
-    // save listing
-    await listing.save();
 
     // return success response
-    const data: IListing = listing;
+    const data: IListing = updatedListing as IListing;
     const success: SuccessResponseData<IListing> = {
-      message: "Listing created successfully",
+      message: "Listing updated successfully",
       data,
-      statusCode: StatusCodes.CREATED,
+      statusCode: StatusCodes.OK,
     };
     return successResponse(
       res,

@@ -298,12 +298,12 @@ export const getSingleListing = tryCatch(
 export const searchListings = tryCatch(
   async (req: RequestObject, res: ListingResponse): Promise<unknown> => {
     // destructure the keyword from the query
-    const { keyword } = req.query;
+    const { q } = req.query;
 
     // check if keyword is provided
-    if (!keyword) {
+    if (!q) {
       const error: ListingError = {
-        message: "Please provide a keyword",
+        message: "Please provide a search query",
         statusCode: StatusCodes.BAD_REQUEST,
       };
       return errorResponse(res, error.message, error.statusCode);
@@ -311,7 +311,7 @@ export const searchListings = tryCatch(
 
     // search for listings
     const listings = await Listing.find({
-      $text: { $search: keyword as string, $caseSensitive: false },
+      $text: { $search: q as string, $caseSensitive: false },
     });
 
     // return success response

@@ -956,11 +956,11 @@ export const updateUserProfile = tryCatch(
     const { avatar, fullname, gender, phone, role } = req.body;
 
     // Capitalize first letter of fullname
-    const uppercaseFullname =
-      CapitalizeFirstLetter.capitalizeFirstLetter(fullname);
+    // const uppercaseFullname =
+    //   CapitalizeFirstLetter.capitalizeFirstLetter(fullname);
 
     // validate user inputs
-    gender.toLowerCase();
+    // gender.toLowerCase();
 
     // Get user id from request object
     const userId = (req as unknown as UserObject).user;
@@ -1020,7 +1020,7 @@ export const updateUserProfile = tryCatch(
       {
         $set: {
           avatar,
-          fullname: uppercaseFullname,
+          fullname,
           gender,
           phone,
           role,

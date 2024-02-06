@@ -299,6 +299,7 @@ export const searchListings = tryCatch(
   async (req: RequestObject, res: ListingResponse): Promise<unknown> => {
     // destructure the keyword from the query
     const { q } = req.query;
+    const queryObject = {} as Record<string, unknown>;
 
     // check if keyword is provided
     if (!q) {
@@ -310,21 +311,22 @@ export const searchListings = tryCatch(
     }
 
     // search for listings
-    const listings = await Listing.find({
-      $text: { $search: q as string, $caseSensitive: false },
-    });
+    if (q) {
+      queryObject["$or"] = [
+        { title: { $regex: q as string, $options: "i" } },
+        { city: { $regex: q as string, $options: "i" } },
+        { state: { $regex: q as string, $options: "i" } },
+        { country: { $regex: q as string, $options: "i" } },
+        { type: { $regex: q as string, $options: "i" } },
+      ];
+    }
 
-    // return success response
-    const success: SuccessResponseData<IListing> = {
-      message: "Listings fetched successfully",
-      data: listings as unknown as IListing,
-      statusCode: StatusCodes.OK,
-    };
+    const listings = await Listing.find(queryObject);
     return successResponse(
       res,
-      success.message,
-      success.data,
-      success.statusCode
+      "Successful",
+      listings as unknown as IListing,
+      StatusCodes.OK
     );
   }
 );

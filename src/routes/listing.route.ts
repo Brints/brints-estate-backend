@@ -27,14 +27,14 @@ listingRouter.get(
   listingController.getAllListings
 );
 listingRouter.get(
-  "/:listingId",
-  userAuthorization.authenticatedUser,
-  listingController.getSingleListing
-);
-listingRouter.get(
   "/search",
   userAuthorization.authenticatedUser,
   listingController.searchListings
+);
+listingRouter.get(
+  "/:listingId",
+  userAuthorization.authenticatedUser,
+  listingController.getSingleListing
 );
 
 export default listingRouter;

@@ -63,33 +63,28 @@ export const createListing = tryCatch(
     // fetch the user from request object
     const userId = (req as unknown as UserObject).user;
 
-    // set status to rent if not provided and type to apartment if not provided
-    // if (!status) {
-    //   status = "rent";
-    // }
-
     // validate request body
-    if (
-      !title ||
-      !description ||
-      !price ||
-      !address ||
-      !city ||
-      !state ||
-      !country ||
-      !status ||
-      !type ||
-      !bedroom ||
-      !bathroom ||
-      !amenities ||
-      !images
-    ) {
-      const error: ListingError = {
-        message: "Please fill in all fields",
-        statusCode: StatusCodes.BAD_REQUEST,
-      };
-      return errorResponse(res, error.message, error.statusCode);
-    }
+    // if (
+    //   !title ||
+    //   !description ||
+    //   !price ||
+    //   !address ||
+    //   !city ||
+    //   !state ||
+    //   !country ||
+    //   !status ||
+    //   !type ||
+    //   !bedroom ||
+    //   !bathroom ||
+    //   !amenities ||
+    //   !images
+    // ) {
+    //   const error: ListingError = {
+    //     message: "Please fill in all fields",
+    //     statusCode: StatusCodes.BAD_REQUEST,
+    //   };
+    //   return errorResponse(res, error.message, error.statusCode);
+    // }
 
     // check if the user is a user
     if (userId.role === "user") {
@@ -218,7 +213,7 @@ export const getAllListings = tryCatch(
 
     // fetch all listings
     const listings = await Listing.find()
-      .populate("owner", "-password")
+      .populate("owner", "fullname email role")
       .sort({ createdAt: -1 })
       .limit(limitNumber)
       .skip(limitNumber * (pageNumber - 1));
@@ -256,7 +251,7 @@ export const getSingleListing = tryCatch(
     // check if listing exists
     if (!listingId) {
       const error: ListingError = {
-        message: "Listing does not exist.",
+        message: "Please provide a listing id",
         statusCode: StatusCodes.NOT_FOUND,
       };
       return errorResponse(res, error.message, error.statusCode);
@@ -264,6 +259,14 @@ export const getSingleListing = tryCatch(
 
     // Fetch Listing
     const listing = await Listing.findOne({ _id: listingId });
+
+    if (!listing) {
+      const error: ListingError = {
+        message: "Listing does not exist.",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, error.message, error.statusCode);
+    }
 
     return successResponse(
       res,

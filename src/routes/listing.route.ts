@@ -31,5 +31,10 @@ listingRouter.get(
   userAuthorization.authenticatedUser,
   listingController.getSingleListing
 );
+listingRouter.get(
+  "/search",
+  userAuthorization.authenticatedUser,
+  listingController.searchListings
+);
 
 export default listingRouter;

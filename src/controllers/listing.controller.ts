@@ -248,6 +248,15 @@ export const getSingleListing = tryCatch(
     // destructure the id from the params
     const { listingId } = req.params;
 
+    // customize error if casting fails
+    if (listingId && !listingId.match(/^[0-9a-fA-F]{24}$/)) {
+      const error: ListingError = {
+        message: "Invalid listing id",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, error.message, error.statusCode);
+    }
+
     // check if listing exists
     if (!listingId) {
       const error: ListingError = {

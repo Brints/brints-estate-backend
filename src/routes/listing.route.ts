@@ -26,5 +26,10 @@ listingRouter.get(
   userAuthorization.authenticatedUser,
   listingController.getAllListings
 );
+listingRouter.get(
+  "/:listingId",
+  userAuthorization.authenticatedUser,
+  listingController.getSingleListing
+);
 
 export default listingRouter;

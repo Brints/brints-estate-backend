@@ -344,97 +344,76 @@ export const searchListings = tryCatch(
 export const updateListing = tryCatch(
   async (req: RequestObject, res: ListingResponse): Promise<unknown> => {
     const { listingId } = req.params;
-
-    // destructure request body
-    const {
-      title,
-      description,
-      price,
-      discount,
-      address,
-      city,
-      state,
-      country,
-      status,
-      type,
-      bedroom,
-      bathroom,
-      amenities,
-      images,
-    } = req.body as RegisterListingRequestBody;
-
-    // fetch the user from request object
     const userId = (req as unknown as UserObject).user;
 
-    // check if listing exists
+    const allowedUpdates = [
+      "title",
+      "description",
+      "price",
+      "address",
+      "city",
+      "state",
+      "country",
+      "status",
+      "type",
+      "bedroom",
+      "bathroom",
+      "amenities",
+      "images",
+    ];
+
+    // const owner = userId._id as string;
+
+    // fetch the listing
     const listing = await Listing.findOne({ _id: listingId });
     if (!listing) {
       const error: ListingError = {
-        message: "Listing does not exist.",
+        message: "Listing does not exist or does not belong to you.",
         statusCode: StatusCodes.NOT_FOUND,
       };
       return errorResponse(res, error.message, error.statusCode);
     }
 
-    // convert the amenities string to array
-    const amenitiesArray: string[] = amenities.split(",");
-
-    // check if the user is the owner of the listing
-    if (userId._id !== listing.owner.toString()) {
+    // check if user owns the listing
+    if (listing.owner.toString() !== (userId._id as string).toString()) {
       const error: ListingError = {
         message: "You are not authorized to update this listing",
         statusCode: StatusCodes.UNAUTHORIZED,
       };
       return errorResponse(res, error.message, error.statusCode);
     }
-    const formattedAmenities = amenitiesArray.map((amenity) => amenity.trim());
 
-    // capitalize the first letter of the state and city
-    const formattedState = CapitalizeFirstLetter.capitalizeFirstLetter(state);
-    const formattedCity = CapitalizeFirstLetter.capitalizeFirstLetter(city);
-    const formattedCountry =
-      CapitalizeFirstLetter.capitalizeFirstLetter(country);
-    const formattedTitle = CapitalizeFirstLetter.capitalizeFirstLetter(title);
+    // update images
+    if (req.files) {
+      // delete the old images from cloudinary
+      for (const filename of listing.images.map((image) => image.filename)) {
+        await cloudinary.uploader.destroy(filename);
+      }
 
-    // check if the description is more than 160 characters
-    const descriptionLength =
-      ListingHelper.descriptionNotMoreThan160Characters(description);
-    if (descriptionLength > 160) {
-      const error: ListingError = {
-        message: "Description cannot be more than 160 characters",
-        statusCode: StatusCodes.BAD_REQUEST,
-      };
-      return errorResponse(res, error.message, error.statusCode);
+      const images = req.files as Express.Multer.File[];
+      const uploadImages = images.map(async (image) => {
+        const result = await cloudinary.uploader.upload(image.path);
+        return { url: result.secure_url, filename: result.public_id };
+      });
+      listing.images = await Promise.all(uploadImages);
     }
 
     // update listing
-    const updatedListing = await Listing.findByIdAndUpdate(
-      { _id: listingId },
-      {
-        title: formattedTitle,
-        description,
-        price,
-        discount,
-        address,
-        city: formattedCity,
-        state: formattedState,
-        country: formattedCountry,
-        status,
-        type,
-        bedroom,
-        bathroom,
-        amenities: formattedAmenities,
-        images,
-      },
-      { new: true }
-    );
+    Object.keys(req.body as Record<string, unknown>).forEach((prop) => {
+      if (allowedUpdates.includes(prop) && prop !== "images") {
+        listing[prop] = (req.body as Record<string, unknown>)[prop];
+      }
+    });
+    // allowedUpdates.forEach(
+    //   (update) =>
+    //     (listing[update] = (req.body as Record<string, unknown>)[update])
+    // );
 
-    CapitalizeFirstLetter.capitalizeFirstLetter(type);
-
-    // upload images to cloudinary
+    // save listing
+    await listing.save();
 
     // return success response
-    const data: IListing = updatedListing as IListing;
+    const data: IListing = listing;
     const success: SuccessResponseData<IListing> = {
       message: "Listing updated successfully",
       data,

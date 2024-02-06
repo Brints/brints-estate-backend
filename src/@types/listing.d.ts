@@ -22,6 +22,7 @@ declare interface IListing extends Document {
   bathroom: number;
   amenities: string[];
   images: { url: string; filename: string }[];
+  owner: string;
   [key: string]: unknown;
 }
 
@@ -40,6 +41,7 @@ declare interface RegisterListingRequestBody {
   bathroom: number;
   amenities: string;
   images: { url: string; filename: string }[];
+  [key: string]: unknown;
 }
 
 declare interface SuccessResponseData<T> {

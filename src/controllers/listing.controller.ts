@@ -478,7 +478,7 @@ export const deleteListing = tryCatch(
     // return success response
     const success: SuccessResponseData<IListing> = {
       message: "Listing deleted successfully",
-      data: listing,
+      data: {} as IListing,
       statusCode: StatusCodes.OK,
     };
     return successResponse(

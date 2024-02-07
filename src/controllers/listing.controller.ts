@@ -64,27 +64,13 @@ export const createListing = tryCatch(
     const userId = (req as unknown as UserObject).user;
 
     // validate request body
-    // if (
-    //   !title ||
-    //   !description ||
-    //   !price ||
-    //   !address ||
-    //   !city ||
-    //   !state ||
-    //   !country ||
-    //   !status ||
-    //   !type ||
-    //   !bedroom ||
-    //   !bathroom ||
-    //   !amenities ||
-    //   !images
-    // ) {
-    //   const error: ListingError = {
-    //     message: "Please fill in all fields",
-    //     statusCode: StatusCodes.BAD_REQUEST,
-    //   };
-    //   return errorResponse(res, error.message, error.statusCode);
-    // }
+    if (!title || !description || !price || !address || !city || !state) {
+      const error: ListingError = {
+        message: "Please provide all required fields",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, error.message, error.statusCode);
+    }
 
     // check if the user is a user
     if (userId.role === "user") {
@@ -489,3 +475,7 @@ export const deleteListing = tryCatch(
     );
   }
 );
+
+/**
+ * @description Get All Listings by Pagination
+ */

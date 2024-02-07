@@ -36,5 +36,15 @@ listingRouter.get(
   userAuthorization.authenticatedUser,
   listingController.getSingleListing
 );
+listingRouter.put(
+  "/:listingId",
+  userAuthorization.authenticatedUser,
+  listingController.updateListing
+);
+listingRouter.delete(
+  "/:listingId",
+  userAuthorization.authenticatedUser,
+  listingController.deleteListing
+);
 
 export default listingRouter;

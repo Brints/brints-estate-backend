@@ -301,7 +301,7 @@ export const searchListings = tryCatch(
     const { q } = req.query;
     const queryObject = {} as Record<string, unknown>;
 
-    // check if keyword is provided
+    // check if query is provided
     if (!q) {
       const error: ListingError = {
         message: "Please provide a search query",
@@ -362,8 +362,6 @@ export const updateListing = tryCatch(
       "images",
     ];
 
-    // const owner = userId._id as string;
-
     // fetch the listing
     const listing = await Listing.findOne({ _id: listingId });
     if (!listing) {
@@ -401,13 +399,21 @@ export const updateListing = tryCatch(
     // update listing
     Object.keys(req.body as Record<string, unknown>).forEach((prop) => {
       if (allowedUpdates.includes(prop) && prop !== "images") {
+        if (
+          prop === "title" ||
+          prop === "city" ||
+          prop === "state" ||
+          prop === "country"
+        ) {
+          const output = CapitalizeFirstLetter.capitalizeFirstLetter(
+            listing[prop]
+          );
+          listing[prop] = output;
+          return;
+        }
         listing[prop] = (req.body as Record<string, unknown>)[prop];
       }
     });
-    // allowedUpdates.forEach(
-    //   (update) =>
-    //     (listing[update] = (req.body as Record<string, unknown>)[update])
-    // );
 
     // save listing
     await listing.save();
@@ -417,6 +423,62 @@ export const updateListing = tryCatch(
     const success: SuccessResponseData<IListing> = {
       message: "Listing updated successfully",
       data,
+      statusCode: StatusCodes.OK,
+    };
+    return successResponse(
+      res,
+      success.message,
+      success.data,
+      success.statusCode
+    );
+  }
+);
+
+/**
+ * @description Delete listing from the database
+ * @route DELETE /listing/:listingId
+ * @access Private
+ * @param {Request<ParamsDictionary, unknown, unknown, ParsedQs>} req
+ * @param {ListingResponse} res
+ * @returns {Promise<ListingResponse | void>}
+ */
+
+export const deleteListing = tryCatch(
+  async (req: RequestObject, res: ListingResponse): Promise<unknown> => {
+    const { listingId } = req.params;
+    const userId = (req as unknown as UserObject).user;
+
+    // fetch the listing
+    const listing = await Listing.findOne({ _id: listingId });
+    if (!listing) {
+      const error: ListingError = {
+        message: "Listing does not exist.",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, error.message, error.statusCode);
+    }
+
+    // check if user owns the listing
+    if (listing.owner.toString() !== (userId._id as string).toString()) {
+      const error: ListingError = {
+        message: "You are not authorized to delete this listing",
+        statusCode: StatusCodes.UNAUTHORIZED,
+      };
+      return errorResponse(res, error.message, error.statusCode);
+    }
+
+    // delete the images from cloudinary
+    for (const filename of listing.images.map((image) => image.filename)) {
+      await cloudinary.uploader.destroy(filename);
+    }
+
+    // delete listing
+    await listing.deleteOne();
+
+    // return success response
+    const success: SuccessResponseData<IListing> = {
+      message: "Listing deleted successfully",
+      data: listing,
       statusCode: StatusCodes.OK,
     };
     return successResponse(

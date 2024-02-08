@@ -16,6 +16,7 @@ import {
   FavoriteError,
   IFavorite,
 } from "../@types/favorite";
+import { IListing } from "../@types/listing";
 
 /**
  * @desc    Create favorite
@@ -49,6 +50,15 @@ export const createFavorite = tryCatch(
       const err: FavoriteError = {
         message: "Listing already saved in favorites.",
         statusCode: StatusCodes.CONFLICT,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // user cannot favorite their own listing
+    if (listing.owner.toString() === (user._id as string).toString()) {
+      const err: FavoriteError = {
+        message: "You cannot favorite your own listing.",
+        statusCode: StatusCodes.BAD_REQUEST,
       };
       return errorResponse(res, err.message, err.statusCode);
     }

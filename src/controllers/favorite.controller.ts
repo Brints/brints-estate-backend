@@ -16,7 +16,6 @@ import {
   FavoriteError,
   IFavorite,
 } from "../@types/favorite";
-import { IListing } from "../@types/listing";
 
 /**
  * @desc    Create favorite

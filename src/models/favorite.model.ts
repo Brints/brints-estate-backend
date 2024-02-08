@@ -17,4 +17,7 @@ const favoriteSchema = new Schema(
   { timestamps: true }
 );
 
-export const Favorite = model<IFavorite>("Favorite", favoriteSchema);
+export const ListingFavorite = model<IFavorite>(
+  "ListingFavorite",
+  favoriteSchema
+);

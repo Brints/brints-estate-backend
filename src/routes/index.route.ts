@@ -10,6 +10,6 @@ const router: Router = Router();
 // routes
 router.use("/user", userRouter);
 router.use("/listing", listingRouter);
-router.use("/listing", favoriteRouter);
+router.use("/listings", favoriteRouter);
 
 export default router;

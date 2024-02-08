@@ -98,3 +98,50 @@ export const getAllFavorites = tryCatch(
     );
   }
 );
+
+/**
+ * @desc    Remove favorite
+ * @route   DELETE /:favoriteId/favorites
+ * @param  {Request} req
+ * @param  {Response} res
+ * @access  Private
+ */
+
+export const removeFavorite = tryCatch(
+  async (req: FavoriteObject, res: FavoriteResponse): Promise<unknown> => {
+    const { favoriteId } = req.params as { favoriteId: string };
+    const user = (req as unknown as UserObject).user;
+
+    // check if casting the favoriteId fails
+    if (favoriteId && !favoriteId.match(/^[0-9a-fA-F]{24}$/)) {
+      const err: FavoriteError = {
+        message: "Invalid favorite id.",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    const favorite = await ListingFavorite.findOne({
+      _id: favoriteId,
+      user: user._id as string,
+    })
+      .populate("listing")
+      .exec();
+    if (!favorite) {
+      const err: FavoriteError = {
+        message: "Favorite does not exist.",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    await favorite.deleteOne();
+
+    return successResponse(
+      res,
+      "Favorite removed",
+      null as unknown as IFavorite,
+      StatusCodes.OK
+    );
+  }
+);

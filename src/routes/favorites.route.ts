@@ -12,5 +12,15 @@ favoriteRouter.post(
   userAuthorization.authenticatedUser,
   favoritesController.createFavorite
 );
+favoriteRouter.get(
+  "/favorites",
+  userAuthorization.authenticatedUser,
+  favoritesController.getAllFavorites
+);
+favoriteRouter.delete(
+  "/:favoriteId",
+  userAuthorization.authenticatedUser,
+  favoritesController.removeFavorite
+);
 
 export default favoriteRouter;

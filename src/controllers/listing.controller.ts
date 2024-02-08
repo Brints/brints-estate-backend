@@ -477,5 +477,35 @@ export const deleteListing = tryCatch(
 );
 
 /**
- * @description Get All Listings by Pagination
+ * @description Get All Listings by a user
+ * @route GET /listings/my-listings
+ * @access Private
+ * @param {Request<ParamsDictionary, unknown, unknown, ParsedQs>} req
+ * @param {ListingResponse} res
+ * @returns {Promise<ListingResponse | void>}
  */
+
+export const getMyListings = tryCatch(
+  async (req: RequestObject, res: ListingResponse): Promise<unknown> => {
+    const userId = (req as unknown as UserObject).user._id as string;
+
+    // fetch all listings by the user
+    const listings = await Listing.find({ owner: userId }).sort({
+      createdAt: -1,
+    });
+
+    // return success response
+    const success: SuccessResponseData<IListing> = {
+      message: "Listings fetched successfully",
+      data: listings as unknown as IListing,
+      statusCode: StatusCodes.OK,
+    };
+
+    return successResponse(
+      res,
+      success.message,
+      success.data,
+      success.statusCode
+    );
+  }
+);

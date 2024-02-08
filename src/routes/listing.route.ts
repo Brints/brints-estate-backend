@@ -46,5 +46,10 @@ listingRouter.delete(
   userAuthorization.authenticatedUser,
   listingController.deleteListing
 );
+listingRouter.get(
+  "/my-listings",
+  userAuthorization.authenticatedUser,
+  listingController.getMyListings
+);
 
 export default listingRouter;

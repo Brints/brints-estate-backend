@@ -14,6 +14,7 @@ import {
   FavoriteRequestBody,
   //IFavorite,
   FavoriteError,
+  IFavorite,
 } from "../@types/favorite";
 
 /**
@@ -62,6 +63,38 @@ export const createFavorite = tryCatch(
       "Listing added to favorites",
       listingFavorite,
       StatusCodes.CREATED
+    );
+  }
+);
+
+/**
+ * @desc    Get all favorites
+ * @route   GET /favorites
+ * @param  {Request} req
+ * @param  {Response} res
+ * @access  Private
+ */
+
+export const getAllFavorites = tryCatch(
+  async (req: FavoriteObject, res: FavoriteResponse): Promise<unknown> => {
+    const user = (req as unknown as UserObject).user;
+
+    const favorites = await ListingFavorite.find({
+      user: user._id as string,
+    }).populate("listing");
+    if (!favorites) {
+      const err: FavoriteError = {
+        message: "No favorites found.",
+        statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    return successResponse(
+      res,
+      "All favorites",
+      favorites as unknown as IFavorite,
+      StatusCodes.OK
     );
   }
 );

@@ -526,15 +526,11 @@ export const loginUser = tryCatch(
       token,
     };
 
-    // destructure user object
-    // const { password: userPwd, ...userProps } = user["_doc"] as IUser;
-
     // Return success response
     return successResponse(
       res,
       "User logged in successfully",
       userResponse as unknown as IUser,
-      // { userProps, token } as unknown as IUser,
       StatusCodes.OK
     );
   }

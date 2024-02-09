@@ -13,6 +13,10 @@ const favoriteSchema = new Schema(
       ref: "User",
       required: true,
     },
+    folder: {
+      type: Schema.Types.ObjectId,
+      ref: "Folder",
+    },
   },
   { timestamps: true }
 );

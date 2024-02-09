@@ -56,7 +56,7 @@ export const createFolder = tryCatch(
     return successResponse(
       res,
       "Folder created successfully.",
-      { folder },
+      folder as IFolder,
       StatusCodes.CREATED
     );
   }

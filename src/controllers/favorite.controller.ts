@@ -12,7 +12,6 @@ import { Listing } from "../models/listing.model";
 import {
   FavoriteResponse,
   FavoriteRequestBody,
-  //IFavorite,
   FavoriteError,
   IFavorite,
 } from "../@types/favorite";
@@ -90,7 +89,10 @@ export const getAllFavorites = tryCatch(
 
     const favorites = await ListingFavorite.find({
       user: user._id as string,
-    }).populate("listing");
+    }).populate({
+      path: "listing",
+      select: "title description price",
+    });
     if (!favorites) {
       const err: FavoriteError = {
         message: "No favorites found.",

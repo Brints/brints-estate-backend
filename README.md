@@ -1,6 +1,7 @@
 # Brints Estate - Backend
 
-Brints Estate is a real estate website that allows users to search for properties, view property details, and contact the real estate agent. This is the backend service of the website that provides the API for the frontend to consume. The aim of this project is to learn how to build a full-stack web application using the MERN stack. Brints Estate Backend Service will bridge the gap for users to search for properties and process acquisition of the property in record time.
+Brints Estate is a real estate website that allows users to search for properties, view property details, and contact the real estate owner/realtors. This is the backend service of the website that provides the API for the frontend to consume. The aim of this project is to learn how to build a full-stack web application using the MERN stack. Brints Estate Backend Service will bridge the gap for users to search for properties and process acquisition of the property in record time.
+Admin, Realtors and landlords can upload, update and delete property.
 
 ## Table of Contents
 
@@ -45,13 +46,18 @@ These instructions will get you a copy of the project up and running on your loc
 - [Express](https://expressjs.com/) - Fast, unopinionated, minimalist web framework for Node.js.
 - [MongoDB](https://www.mongodb.com/) - NoSQL database.
 - [Mongoose](https://mongoosejs.com/) - Elegant MongoDB object modeling for Node.js.
+
+## Test
+
 - [Jest](https://jestjs.io/) - JavaScript Testing Framework.
 - [Supertest]() - HTTP assertions made easy via superagent.
+
+## Utility
+
 - [ESLint](https://eslint.org/) - Linting utility.
 - [Prettier](https://prettier.io/) - Code formatter.
 - [Babel](https://babeljs.io/) - JavaScript compiler.
-- [Travis CI](https://travis-ci.org/) - Continuous Integration service.
-- [Heroku](https://www.heroku.com/) - Cloud Application Platform.
 
 ## Authors
+
 [Aniebiet Afia](https://linkedin.com/in/aniebietafia)

@@ -61,3 +61,12 @@ export const createFolder = tryCatch(
     );
   }
 );
+
+/**
+ * @desc    Get all folders
+ * @route   GET /folders
+ * @param  {Request} req
+ * @param  {Response} res
+ * @access  Private
+ * @returns {Promise<unknown>}
+ */

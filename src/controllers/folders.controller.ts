@@ -70,3 +70,17 @@ export const createFolder = tryCatch(
  * @access  Private
  * @returns {Promise<unknown>}
  */
+
+export const getFolders = tryCatch(
+  async (req: FolderRequestObject, res: FolderResponse): Promise<unknown> => {
+    const user = (req as unknown as UserObject).user;
+    const folders = await Folder.find({ user: user._id as string });
+
+    return successResponse(
+      res,
+      "Folders retrieved successfully.",
+      folders as unknown as IFolder,
+      StatusCodes.OK
+    );
+  }
+);

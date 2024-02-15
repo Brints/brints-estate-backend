@@ -85,3 +85,29 @@ export const validateVerifyEmail = [
     return next();
   },
 ];
+
+// validate user input for login
+export const validateLogin = [
+  body("email")
+    .exists()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Invalid email address")
+    .isString()
+    .withMessage("Email should be a string")
+    .toLowerCase()
+    .trim(),
+  body("password").exists().withMessage("Password is required").trim(),
+
+  (req: Request, res: ValidateUserRegistrationResponse, next: NextFunction) => {
+    const errors = validationResult(req).formatWith(errorFormatter);
+    if (!errors.isEmpty()) {
+      const err = {
+        message: errors.array().join(", "),
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+    return next();
+  },
+];

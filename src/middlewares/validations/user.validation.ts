@@ -111,3 +111,28 @@ export const validateLogin = [
     return next();
   },
 ];
+
+// validate user input for forgot password
+export const validateForgotPassword = [
+  body("email")
+    .exists()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Invalid email address")
+    .isString()
+    .withMessage("Email should be a string")
+    .toLowerCase()
+    .trim(),
+
+  (req: Request, res: ValidateUserRegistrationResponse, next: NextFunction) => {
+    const errors = validationResult(req).formatWith(errorFormatter);
+    if (!errors.isEmpty()) {
+      const err = {
+        message: errors.array().join(", "),
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+    return next();
+  },
+];

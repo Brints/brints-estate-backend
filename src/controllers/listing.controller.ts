@@ -218,6 +218,9 @@ export const getAllListings = tryCatch(
         for (const filename of listing.images.map((image) => image.filename)) {
           await cloudinary.uploader.destroy(filename);
         }
+
+        // delete the location
+        await Location.findByIdAndDelete(listing.location);
       });
     }
 

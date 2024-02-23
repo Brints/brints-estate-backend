@@ -9,6 +9,12 @@ declare interface IListing extends Document {
   price: number;
   discount?: number;
   location: string;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  zipcode?: string;
   status: string;
   type: string;
   bedroom: number;

@@ -52,6 +52,8 @@ export const createListing = tryCatch(
       city,
       state,
       country,
+      name,
+      zipcode,
       status,
       type,
       bedroom,
@@ -64,7 +66,23 @@ export const createListing = tryCatch(
     const userId = (req as unknown as UserObject).user;
 
     // validate request body
-    if (!title || !description || !price || !address || !city || !state) {
+    if (
+      !title ||
+      !description ||
+      !price ||
+      !address ||
+      !city ||
+      !state ||
+      !country ||
+      !status ||
+      !type ||
+      !bedroom ||
+      !bathroom ||
+      !amenities ||
+      !images ||
+      !userId ||
+      !name
+    ) {
       const error: ListingError = {
         message: "Please provide all required fields",
         statusCode: StatusCodes.BAD_REQUEST,

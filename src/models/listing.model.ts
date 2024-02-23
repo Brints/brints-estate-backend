@@ -4,11 +4,13 @@ import { IListing } from "../@types/listing";
 // Listing schema
 const listingSchema: Schema = new Schema(
   {
+    images: [{ url: String, filename: String }],
     title: { type: String, required: true, trim: true },
     description: { type: String, required: true },
     price: { type: Number, required: true },
     discount: { type: Number, default: 0 },
     location: { type: Schema.Types.ObjectId, ref: "Location" },
+    owner: { type: Schema.Types.ObjectId, ref: "User" },
     status: {
       type: String,
       enum: ["rent", "sale"],
@@ -23,8 +25,6 @@ const listingSchema: Schema = new Schema(
     bedroom: { type: Number, required: true },
     bathroom: { type: Number, required: true },
     amenities: { type: Array, required: true },
-    images: [{ url: String, filename: String }],
-    owner: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );

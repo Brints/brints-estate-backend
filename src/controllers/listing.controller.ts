@@ -80,9 +80,7 @@ export const createListing = tryCatch(
       !bedroom ||
       !bathroom ||
       !amenities ||
-      !images ||
-      !userId ||
-      !name
+      !images
     ) {
       const error: ListingError = {
         message: "Please provide all required fields",

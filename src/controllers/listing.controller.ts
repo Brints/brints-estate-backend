@@ -200,8 +200,32 @@ export const getAllListings = tryCatch(
       return errorResponse(res, error.message, error.statusCode);
     }
 
-    // fetch all listings
-    const listings = await Listing.find()
+    // const listings = await Listing.find()
+    //   .sort({ createdAt: -1 })
+    //   .limit(limitNumber)
+    //   .skip(limitNumber * (pageNumber - 1));
+
+    const takenListings = await Listing.find({ status: "taken" });
+
+    // delete images of listings that have been taken
+    // const filterTakenListings = listings.filter(
+    //   (listing) => listing.status === "taken"
+    // );
+    if (takenListings.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      takenListings.forEach(async (listing) => {
+        // delete the images from cloudinary
+        for (const filename of listing.images.map((image) => image.filename)) {
+          await cloudinary.uploader.destroy(filename);
+        }
+      });
+    }
+
+    // delete listings that are taken from the database
+    await Listing.deleteMany({ status: "taken" });
+
+    // fetch all listings where status is not taken
+    const allListings = await Listing.find({ status: { $ne: "taken" } })
       .sort({ createdAt: -1 })
       .limit(limitNumber)
       .skip(limitNumber * (pageNumber - 1));
@@ -209,7 +233,7 @@ export const getAllListings = tryCatch(
     // return success response
     const success: SuccessResponseData<IListing> = {
       message: "Listings fetched successfully",
-      data: listings as unknown as IListing,
+      data: allListings as unknown as IListing,
       statusCode: StatusCodes.OK,
     };
     return successResponse(

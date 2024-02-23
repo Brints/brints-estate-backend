@@ -8,10 +8,7 @@ const listingSchema: Schema = new Schema(
     description: { type: String, required: true },
     price: { type: Number, required: true },
     discount: { type: Number, default: 0 },
-    address: { type: String, required: true, trim: true },
-    city: { type: String, required: true, trim: true },
-    state: { type: String, required: true, trim: true },
-    country: { type: String, required: true, trim: true },
+    location: { type: Schema.Types.ObjectId, ref: "Location" },
     status: {
       type: String,
       enum: ["rent", "sale"],

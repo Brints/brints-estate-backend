@@ -9,6 +9,7 @@ import tryCatch from "../utils/lib/try-catch.lib";
 import { successResponse, errorResponse } from "../utils/lib/response.lib";
 import { UserObject } from "../@types";
 import { Listing } from "../models/listing.model";
+import { Location } from "../models/location.model";
 import { cloudinary } from "../config/multer.config";
 import { CapitalizeFirstLetter } from "../utils/helpers/user.helper";
 import { ListingHelper } from "../utils/helpers/user.helper";
@@ -94,7 +95,7 @@ export const createListing = tryCatch(
     if (userId.role === "user") {
       const error: ListingError = {
         message:
-          "You are cannot create a listing. Upgrade to an agent/landlord account",
+          "You cannot create a listing. Upgrade to an agent/landlord account",
         statusCode: StatusCodes.UNAUTHORIZED,
       };
       return errorResponse(res, error.message, error.statusCode);
@@ -124,16 +125,24 @@ export const createListing = tryCatch(
 
     const owner = userId._id as string;
 
+    // add location to the database
+    const location = await Location.create({
+      name,
+      address,
+      city: formattedCity,
+      state: formattedState,
+      country: formattedCountry,
+      zipcode,
+    });
+
+    await location.save();
+
     // create new listing
     const listing = await Listing.create({
       title: formattedTitle,
       description,
       price,
       discount,
-      address,
-      city: formattedCity,
-      state: formattedState,
-      country: formattedCountry,
       status,
       type,
       bedroom,
@@ -141,6 +150,7 @@ export const createListing = tryCatch(
       amenities: formattedAmenities,
       images,
       owner,
+      location: location._id as string,
     });
 
     CapitalizeFirstLetter.capitalizeFirstLetter(type);

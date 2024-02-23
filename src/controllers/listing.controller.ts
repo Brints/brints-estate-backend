@@ -66,29 +66,6 @@ export const createListing = tryCatch(
     // fetch the user from request object
     const userId = (req as unknown as UserObject).user;
 
-    // validate request body
-    if (
-      !title ||
-      !description ||
-      !price ||
-      !address ||
-      !city ||
-      !state ||
-      !country ||
-      !status ||
-      !type ||
-      !bedroom ||
-      !bathroom ||
-      !amenities ||
-      !images
-    ) {
-      const error: ListingError = {
-        message: "Please provide all required fields",
-        statusCode: StatusCodes.BAD_REQUEST,
-      };
-      return errorResponse(res, error.message, error.statusCode);
-    }
-
     // check if the user is a user
     if (userId.role === "user") {
       const error: ListingError = {
@@ -225,7 +202,6 @@ export const getAllListings = tryCatch(
 
     // fetch all listings
     const listings = await Listing.find()
-      .populate("owner", "fullname email role")
       .sort({ createdAt: -1 })
       .limit(limitNumber)
       .skip(limitNumber * (pageNumber - 1));
@@ -279,7 +255,9 @@ export const getSingleListing = tryCatch(
     }
 
     // Fetch Listing
-    const listing = await Listing.findOne({ _id: listingId });
+    const listing = await Listing.findOne({ _id: listingId })
+      .populate("owner", "fullname email")
+      .populate("location", "name address city state country zipcode");
 
     if (!listing) {
       const error: ListingError = {
@@ -362,10 +340,6 @@ export const updateListing = tryCatch(
       "title",
       "description",
       "price",
-      "address",
-      "city",
-      "state",
-      "country",
       "status",
       "type",
       "bedroom",
@@ -478,6 +452,9 @@ export const deleteListing = tryCatch(
       };
       return errorResponse(res, error.message, error.statusCode);
     }
+
+    // delete the location
+    await Location.findByIdAndDelete(listing.location);
 
     // delete the images from cloudinary
     for (const filename of listing.images.map((image) => image.filename)) {

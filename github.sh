@@ -7,3 +7,6 @@ cd /var/www/brints-estate-backend/
 
 # Pull the changes from the repository
 git pull origin main --ff-only
+
+# Run the build script
+yarn build

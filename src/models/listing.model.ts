@@ -13,7 +13,7 @@ const listingSchema: Schema = new Schema(
     owner: { type: Schema.Types.ObjectId, ref: "User" },
     status: {
       type: String,
-      enum: ["rent", "sale"],
+      enum: ["rent", "sale", "taken"],
       default: "rent",
     },
     type: {

@@ -19,10 +19,11 @@ COPY --chown=node:node src ./src
 RUN yarn
 
 # Build TypeScript files
-RUN yarn build
+RUN tsc
 
 # expose port
 EXPOSE 3001
 
 # start the app
-CMD [ "yarn", "start" ]
+CMD [ "node", "dist/server.js" ]
+# CMD [ "yarn", "start" ]

@@ -3,7 +3,7 @@ RUN mkdir -p /home/node/brints-estate-backend/node_modules && chown -R node:node
 WORKDIR /home/node/brints-estate
 COPY --chown=node:node package*.json ./
 USER node
-RUN yarn
+RUN npm install
 COPY --chown=node:node . .
 EXPOSE 3001
 CMD [ "yarn", "start" ]

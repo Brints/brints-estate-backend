@@ -19,7 +19,7 @@ COPY --chown=node:node src ./src
 RUN yarn
 
 # Build TypeScript files
-RUN tsc
+RUN yarn global add typescript && yarn build
 
 # expose port
 EXPOSE 3001

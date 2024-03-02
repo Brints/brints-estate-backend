@@ -26,7 +26,7 @@ userRouter.post(
   userController.registerUser
 );
 userRouter.post("/google-signup", userController.googleSignUp);
-userRouter.get("verify-email", userController.verifyEmail);
+userRouter.get("/verify-email", userController.verifyEmail);
 userRouter.post("/login", userController.loginUser);
 userRouter.get(
   "/profile",

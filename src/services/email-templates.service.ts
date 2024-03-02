@@ -4,7 +4,7 @@ import { IUser } from "../@types";
 // Register user email template
 export const registerEmailTemplate = async (user: IUser) => {
   const { email, fullname, verificationToken, verificationTokenExpire } = user;
-  const verificationUrl = `${process.env["FRONTEND_URL"]}/verify-email/${verificationToken}/${email}`;
+  const verificationUrl = `${process.env["FRONTEND_URL"]}/verify-email?token=${verificationToken}/email=${email}`;
   const expiration =
     Math.round(
       ((verificationTokenExpire as Date).getTime() - new Date().getTime()) /

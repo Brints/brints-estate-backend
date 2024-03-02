@@ -13,7 +13,9 @@ import * as userAuthorization from "../middlewares/authorization/user.authorizat
 // validators
 import {
   validateUserRegistration,
-  //validateVerifyEmail,
+  validateLogin,
+  validateForgotPassword,
+  validateVerifyEmail,
 } from "../middlewares/validations/user.validation";
 
 const userRouter: Router = Router();
@@ -26,8 +28,12 @@ userRouter.post(
   userController.registerUser
 );
 userRouter.post("/google-signup", userController.googleSignUp);
-userRouter.get("/verify-email", userController.verifyEmail);
-userRouter.post("/login", userController.loginUser);
+userRouter.get(
+  "/verify-email",
+  validateVerifyEmail,
+  userController.verifyEmail
+);
+userRouter.post("/login", validateLogin, userController.loginUser);
 userRouter.get(
   "/profile",
   userAuthorization.authenticatedUser,
@@ -43,7 +49,11 @@ userRouter.post(
   "/resend-verification-token",
   userController.generateNewVerificationToken
 );
-userRouter.post("/forgot-password", userController.forgotPassword);
+userRouter.post(
+  "/forgot-password",
+  validateForgotPassword,
+  userController.forgotPassword
+);
 userRouter.post("/reset-password/:token/:email", userController.resetPassword);
 userRouter.post(
   "/change-password",

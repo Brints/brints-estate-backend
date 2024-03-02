@@ -21,7 +21,7 @@ export const validateUserRegistration = [
     .exists()
     .withMessage("Email is required")
     .isEmail()
-    .withMessage("Invalid email address")
+    .withMessage("Email should be a valid email address")
     .isString()
     .withMessage("Email should be a string")
     .toLowerCase()
@@ -29,17 +29,19 @@ export const validateUserRegistration = [
   body("password")
     .exists()
     .withMessage("Password is required")
+    .trim()
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters long")
     .isStrongPassword()
     .withMessage(
       "Password must contain at least 1 lowercase, 1 uppercase, 1 number and 1 symbol"
-    )
-    .trim(),
+    ),
   body("confirmPassword")
     .exists()
     .withMessage("Confirm password is required")
-    .trim(),
+    .trim()
+    .equals("password")
+    .withMessage("Passwords do not match"),
   body("gender")
     .exists()
     .withMessage("Choose your gender")

@@ -7,20 +7,20 @@ RUN mkdir -p /home/node/brints-estate-backend/node_modules && chown -R node:node
 WORKDIR /home/node/brints-estate-backend
 
 # copy package.json and yarn.lock files
-COPY --chown=node:node package*.json ./
+COPY --chown=node:node package*.json yarn.lock ./
 
 # switch to non-root user
 USER node
 
 # copy source files
-COPY --chown=node:node src ./src
+COPY --chown=node:node . .
 
 # install dependencies
 RUN yarn
 
+
 # Build TypeScript files
-RUN yarn global add typescript
-RUN tsc
+RUN yarn build
 
 # expose port
 EXPOSE 3001

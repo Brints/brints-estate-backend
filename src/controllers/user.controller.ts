@@ -53,22 +53,6 @@ export const registerUser = tryCatch(
       confirmPassword,
     } = req.body;
 
-    // validate user inputs
-    if (
-      !fullname ||
-      !email ||
-      !phone ||
-      !gender ||
-      !password ||
-      !confirmPassword
-    ) {
-      const err: UserError = {
-        message: "All fields are required",
-        statusCode: StatusCodes.BAD_REQUEST,
-      };
-      return errorResponse(res, err.message, err.statusCode);
-    }
-
     // Check if user already exist
     const user = await User.findOne({ email });
     if (user) {
@@ -350,7 +334,7 @@ export const googleSignUp = tryCatch(
 
 /**
  * @description Verify user email
- * @route GET /user/verify-email/:token&email=:email
+ * @route POST /user/verify-email/?token=token&email=email
  * @param {Request} req
  * @param {Response} res
  * @returns {JSON} message
@@ -363,16 +347,7 @@ type VerifyEmail = Request<unknown, unknown, verifyEmailParams, unknown>;
 export const verifyEmail = tryCatch(
   async (req: VerifyEmail, res: UserResponse) => {
     // Get token and email from request params
-    const { token, email }: verifyEmailParams = req.params as verifyEmailParams;
-
-    // Check if token and email is provided
-    if (!token || !email) {
-      const err: UserError = {
-        message: "Token and email is required",
-        statusCode: StatusCodes.BAD_REQUEST,
-      };
-      return errorResponse(res, err.message, err.statusCode);
-    }
+    const { token, email }: verifyEmailParams = req.query as verifyEmailParams;
 
     // Find user by email
     const user = await User.findOne({ email });
@@ -415,8 +390,6 @@ export const verifyEmail = tryCatch(
       };
       return errorResponse(res, err.message, err.statusCode);
     }
-
-    console.log(user.verificationTokenExpire);
 
     // Set user verified to true
     user.verified = true;

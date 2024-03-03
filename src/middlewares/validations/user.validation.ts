@@ -7,47 +7,68 @@ const errorFormatter = ({ msg }: { msg: string }) => {
   return `${msg}`;
 };
 
-type ValidateUserRegistrationResponse = Response<unknown>;
+type ValidateUserRegistrationResponse = Response<
+  unknown,
+  Record<string, unknown>
+>;
 
 // validate user input for user registration
 export const validateUserRegistration = [
   body("fullname")
     .exists()
-    .withMessage("Fullname is required")
+    .withMessage("Required Field.")
+    .notEmpty()
+    .withMessage("Fullname is required.")
     .isString()
     .withMessage("Fullname should be a string")
+    .isLength({ max: 80 })
+    .withMessage("Fullname should not be more than 80 characters")
     .trim(),
   body("email")
     .exists()
-    .withMessage("Email is required")
+    .withMessage("Required Field.")
+    .notEmpty()
+    .withMessage("Email address is required.")
     .isEmail()
-    .withMessage("Email should be a valid email address")
+    .withMessage("Invalid email address")
     .isString()
     .withMessage("Email should be a string")
+    .normalizeEmail()
     .toLowerCase()
     .trim(),
   body("password")
     .exists()
-    .withMessage("Password is required")
-    .trim()
+    .withMessage("Required Field.")
+    .notEmpty()
+    .withMessage("Password is required.")
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters long")
     .isStrongPassword()
     .withMessage(
       "Password must contain at least 1 lowercase, 1 uppercase, 1 number and 1 symbol"
-    ),
+    )
+    .trim(),
   body("confirmPassword")
     .exists()
-    .withMessage("Confirm password is required")
-    .trim()
-    .equals("password")
-    .withMessage("Passwords do not match"),
+    .withMessage("Confirm password is required field")
+    .notEmpty()
+    .withMessage("Confirm password is required.")
+    .trim(),
   body("gender")
     .exists()
-    .withMessage("Choose your gender")
+    .withMessage("Required Field")
+    .notEmpty()
+    .withMessage("Gender is required.")
+    .isString()
+    .withMessage("Gender should be a string")
     .toLowerCase()
     .trim(),
-  body("phone").exists().withMessage("Phone number is required").trim(),
+  body("phone")
+    .exists()
+    .withMessage("Required Field")
+    .notEmpty()
+    .withMessage("Phone number is required.")
+    .trim(),
 
   (req: Request, res: ValidateUserRegistrationResponse, next: NextFunction) => {
     const errors = validationResult(req).formatWith(errorFormatter);
@@ -64,15 +85,22 @@ export const validateUserRegistration = [
 
 // validate user input for verify email
 export const validateVerifyEmail = [
-  body("token").exists().withMessage("Token is required").trim(),
+  body("token")
+    .exists()
+    .withMessage("Required Field.")
+    .notEmpty()
+    .withMessage("Provide a valid token.")
+    .trim(),
   body("email")
     .exists()
-    .withMessage("Email is required")
+    .withMessage("Required Field.")
+    .notEmpty()
+    .withMessage("Provide a valid email address.")
     .isEmail()
     .withMessage("Invalid email address")
     .isString()
     .withMessage("Email should be a string")
-    .toLowerCase()
+    .normalizeEmail()
     .trim(),
 
   (req: Request, res: ValidateUserRegistrationResponse, next: NextFunction) => {
@@ -92,14 +120,21 @@ export const validateVerifyEmail = [
 export const validateLogin = [
   body("email")
     .exists()
-    .withMessage("Email is required")
+    .withMessage("Required Field.")
+    .notEmpty()
+    .withMessage("Provide a valid email address.")
     .isEmail()
     .withMessage("Invalid email address")
     .isString()
     .withMessage("Email should be a string")
     .toLowerCase()
     .trim(),
-  body("password").exists().withMessage("Password is required").trim(),
+  body("password")
+    .exists()
+    .withMessage("Required Field.")
+    .notEmpty()
+    .withMessage("Pssword is required.")
+    .trim(),
 
   (req: Request, res: ValidateUserRegistrationResponse, next: NextFunction) => {
     const errors = validationResult(req).formatWith(errorFormatter);
@@ -118,7 +153,9 @@ export const validateLogin = [
 export const validateForgotPassword = [
   body("email")
     .exists()
-    .withMessage("Email is required")
+    .withMessage("Required Field.")
+    .notEmpty()
+    .withMessage("Provide a valid email address.")
     .isEmail()
     .withMessage("Invalid email address")
     .isString()

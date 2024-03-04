@@ -1,4 +1,4 @@
-import { body, validationResult } from "express-validator";
+import { body, query, validationResult } from "express-validator";
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { errorResponse } from "../../utils/lib/response.lib";
@@ -85,13 +85,13 @@ export const validateUserRegistration = [
 
 // validate user input for verify email
 export const validateVerifyEmail = [
-  body("token")
+  query("token")
     .exists()
     .withMessage("Required Field.")
     .notEmpty()
     .withMessage("Provide a valid token.")
     .trim(),
-  body("email")
+  query("email")
     .exists()
     .withMessage("Required Field.")
     .notEmpty()
@@ -133,7 +133,7 @@ export const validateLogin = [
     .exists()
     .withMessage("Required Field.")
     .notEmpty()
-    .withMessage("Pssword is required.")
+    .withMessage("Password is required.")
     .trim(),
 
   (req: Request, res: ValidateUserRegistrationResponse, next: NextFunction) => {

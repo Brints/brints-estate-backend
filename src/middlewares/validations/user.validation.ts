@@ -175,3 +175,30 @@ export const validateForgotPassword = [
     return next();
   },
 ];
+
+// validate input for resend verification token
+export const validateResendVerificationToken = [
+  body("email")
+    .exists()
+    .withMessage("Required Field.")
+    .notEmpty()
+    .withMessage("Provide a valid email address.")
+    .isEmail()
+    .withMessage("Please provide a valid email address.")
+    .isString()
+    .withMessage("Email should be a string")
+    .toLowerCase()
+    .trim(),
+
+  (req: Request, res: ValidateUserRegistrationResponse, next: NextFunction) => {
+    const errors = validationResult(req).formatWith(errorFormatter);
+    if (!errors.isEmpty()) {
+      const err = {
+        message: errors.array().join(", "),
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+    return next();
+  },
+];

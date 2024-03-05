@@ -1,4 +1,4 @@
-import { body, query, validationResult } from "express-validator";
+import { body, param, query, validationResult } from "express-validator";
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
 import { errorResponse } from "../../utils/lib/response.lib";
@@ -205,15 +205,51 @@ export const validateResendVerificationToken = [
 
 // validation for reset password
 export const validateResetPassword = [
-  body("email")
+  param("email")
     .exists()
     .withMessage("Required Field.")
     .notEmpty()
-    .withMessage("Provide a valid email address.")
+    .withMessage("Email address cannot be empty.")
     .isEmail()
-    .withMessage("Invalid email address")
+    .withMessage("Please provide a valid email address.")
     .isString()
     .withMessage("Email should be a string")
     .toLowerCase()
     .trim(),
+  param("token")
+    .exists()
+    .withMessage("Required Field.")
+    .notEmpty()
+    .withMessage("Token cannot be empty.")
+    .trim(),
+  body("newPassword")
+    .exists()
+    .withMessage("Required Field.")
+    .notEmpty()
+    .withMessage("Password cannot be empty.")
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters long")
+    .isStrongPassword()
+    .withMessage(
+      "Password must contain at least 1 lowercase, 1 uppercase, 1 number and 1 symbol"
+    )
+    .trim(),
+  body("confirmPassword")
+    .exists()
+    .withMessage("Required Field.")
+    .notEmpty()
+    .withMessage("Confirm password cannot be empty.")
+    .trim(),
+
+  (req: Request, res: ValidateUserRegistrationResponse, next: NextFunction) => {
+    const errors = validationResult(req).formatWith(errorFormatter);
+    if (!errors.isEmpty()) {
+      const err = {
+        message: errors.array().join(", "),
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+    return next();
+  },
 ];

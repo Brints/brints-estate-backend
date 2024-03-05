@@ -736,19 +736,10 @@ export const resetPassword = tryCatch(
   async (req: RequestObject, res: UserResponse) => {
     // Get user input
     const { token, email } = req.params;
-    const { password, confirmPassword } = req.body as {
-      password: string;
+    const { newPassword, confirmPassword } = req.body as {
+      newPassword: string;
       confirmPassword: string;
     };
-
-    // validate user inputs
-    if (!token || !email || !password || !confirmPassword) {
-      const err: UserError = {
-        message: "All fields are required",
-        statusCode: StatusCodes.BAD_REQUEST,
-      };
-      return errorResponse(res, err.message, err.statusCode);
-    }
 
     // Check if user exist
     const user = await User.findOne({ email });
@@ -761,7 +752,7 @@ export const resetPassword = tryCatch(
     }
 
     // Check if password match
-    if (password !== confirmPassword) {
+    if (newPassword !== confirmPassword) {
       const err: UserError = {
         message: "Password does not match",
         statusCode: StatusCodes.BAD_REQUEST,
@@ -789,7 +780,7 @@ export const resetPassword = tryCatch(
 
     // check if password is the same as the old password
     const isOldPassword = await BcryptHelper.comparePassword(
-      password,
+      newPassword,
       user.password
     );
     if (isOldPassword) {
@@ -801,7 +792,7 @@ export const resetPassword = tryCatch(
     }
 
     // Hash user password
-    const hashedPassword = await BcryptHelper.hashPassword(password);
+    const hashedPassword = await BcryptHelper.hashPassword(newPassword);
 
     // Set user password
     user.password = hashedPassword;

@@ -182,7 +182,7 @@ export const validateResendVerificationToken = [
     .exists()
     .withMessage("Required Field.")
     .notEmpty()
-    .withMessage("Provide a valid email address.")
+    .withMessage("Email address cannot be empty.")
     .isEmail()
     .withMessage("Please provide a valid email address.")
     .isString()
@@ -201,4 +201,19 @@ export const validateResendVerificationToken = [
     }
     return next();
   },
+];
+
+// validation for reset password
+export const validateResetPassword = [
+  body("email")
+    .exists()
+    .withMessage("Required Field.")
+    .notEmpty()
+    .withMessage("Provide a valid email address.")
+    .isEmail()
+    .withMessage("Invalid email address")
+    .isString()
+    .withMessage("Email should be a string")
+    .toLowerCase()
+    .trim(),
 ];

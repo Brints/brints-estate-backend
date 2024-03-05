@@ -16,6 +16,7 @@ import {
   validateLogin,
   validateForgotPassword,
   validateVerifyEmail,
+  validateResendVerificationToken,
 } from "../middlewares/validations/user.validation";
 
 const userRouter: Router = Router();
@@ -47,6 +48,7 @@ userRouter.put(
 );
 userRouter.post(
   "/resend-verification-token",
+  validateResendVerificationToken,
   userController.generateNewVerificationToken
 );
 userRouter.post(

@@ -327,4 +327,9 @@ export const validateChangePassword = [
       "Password must contain at least 1 lowercase, 1 uppercase, 1 number and 1 symbol"
     )
     .trim(),
+  body("confirmPassword")
+    .exists()
+    .withMessage("Confirm Password Field is required.")
+    .notEmpty()
+    .withMessage("Confirm Password cannot be empty."),
 ];

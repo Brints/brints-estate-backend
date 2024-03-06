@@ -919,12 +919,8 @@ export const updateUserProfile = tryCatch(
   async (req: UpdateUserProfileRequest, res: UserResponse) => {
     const { avatar, fullname, gender, phone, role } = req.body;
 
-    // Capitalize first letter of fullname
-    // const uppercaseFullname =
-    //   CapitalizeFirstLetter.capitalizeFirstLetter(fullname);
-
-    // validate user inputs
-    // gender.toLowerCase();
+    // capitalize fullname
+    CapitalizeFirstLetter.capitalizeFirstLetter(fullname);
 
     // Get user id from request object
     const userId = (req as unknown as UserObject).user;

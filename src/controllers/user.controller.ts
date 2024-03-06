@@ -856,7 +856,7 @@ export const changePassword = tryCatch(
     );
     if (!oldPasswordMatch) {
       const err: UserError = {
-        message: "Your old password does not match.",
+        message: "Please provide the correct old password.",
         statusCode: StatusCodes.BAD_REQUEST,
       };
       return errorResponse(res, err.message, err.statusCode);

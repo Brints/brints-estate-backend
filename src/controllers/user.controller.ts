@@ -72,6 +72,15 @@ export const registerUser = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
+    // Handle gender ValidationError
+    if (gender.toLowerCase() !== "male" || gender.toLowerCase() !== "female") {
+      const err: UserError = {
+        message: `${gender} is not a valid enum value`,
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
     // check if password is the same as email
     if (password === email) {
       const err: UserError = {
@@ -920,7 +929,7 @@ export const updateUserProfile = tryCatch(
     const { avatar, fullname, gender, phone, role } = req.body;
 
     // capitalize fullname
-    CapitalizeFirstLetter.capitalizeFirstLetter(fullname);
+    // CapitalizeFirstLetter.capitalizeFirstLetter(fullname);
 
     // Get user id from request object
     const userId = (req as unknown as UserObject).user;
@@ -980,7 +989,7 @@ export const updateUserProfile = tryCatch(
       {
         $set: {
           avatar,
-          fullname,
+          fullname: CapitalizeFirstLetter.capitalizeFirstLetter(fullname), // capitalize fullname
           gender,
           phone,
           role,

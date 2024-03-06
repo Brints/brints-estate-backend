@@ -330,7 +330,7 @@ export const validateChangePassword = [
     .notEmpty()
     .withMessage("Confirm Password cannot be empty.")
     .equals("newPassword")
-    .withMessage("Passwors do not match.")
+    .withMessage("Password does not match.")
     .trim(),
 
   (req: Request, res: ValidateUserResponse, next: NextFunction) => {

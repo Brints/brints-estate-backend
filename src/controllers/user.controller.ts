@@ -177,9 +177,18 @@ export const registerUser = tryCatch(
     ];
 
     const userMobileOperator = phone.slice(4, 8);
+    console.log(userMobileOperator);
     if (!mobileOperator.includes(userMobileOperator)) {
       const err: UserError = {
         message: `${userMobileOperator} is not a valid mobile operator.`,
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    if (phone.slice(8).length !== 7) {
+      const err: UserError = {
+        message: "Phone number must be 11 digits",
         statusCode: StatusCodes.BAD_REQUEST,
       };
       return errorResponse(res, err.message, err.statusCode);

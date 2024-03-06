@@ -321,5 +321,10 @@ export const validateChangePassword = [
     .isLength({ min: 8, max: 16 })
     .withMessage(
       "Password should not be less than 8 characters and not more than 16 characters."
-    ),
+    )
+    .isStrongPassword()
+    .withMessage(
+      "Password must contain at least 1 lowercase, 1 uppercase, 1 number and 1 symbol"
+    )
+    .trim(),
 ];

@@ -295,3 +295,11 @@ export const validateResetPassword = [
     return next();
   },
 ];
+
+/**
+ * @description Validation to change password
+ * @param {string} req
+ * @param {string} res
+ * @param {string} next
+ * @returns {object} error
+ */

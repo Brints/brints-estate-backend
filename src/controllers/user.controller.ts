@@ -53,6 +53,15 @@ export const registerUser = tryCatch(
       confirmPassword,
     } = req.body;
 
+    // Handle gender ValidationError
+    if (gender.toLowerCase() !== "male" && gender.toLowerCase() !== "female") {
+      const err: UserError = {
+        message: `${gender} is not a valid gender enum value`,
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
     const countryCode = ["+234", "+1", "+44", "+27", "+254", "+233", "+20"];
     const userCountryCode = phone.slice(0, 4);
     if (!countryCode.includes(userCountryCode)) {
@@ -208,15 +217,6 @@ export const registerUser = tryCatch(
     if (password !== confirmPassword) {
       const err: UserError = {
         message: "Password does not match",
-        statusCode: StatusCodes.BAD_REQUEST,
-      };
-      return errorResponse(res, err.message, err.statusCode);
-    }
-
-    // Handle gender ValidationError
-    if (gender.toLowerCase() !== "male" || gender.toLowerCase() !== "female") {
-      const err: UserError = {
-        message: `${gender} is not a valid enum value`,
         statusCode: StatusCodes.BAD_REQUEST,
       };
       return errorResponse(res, err.message, err.statusCode);

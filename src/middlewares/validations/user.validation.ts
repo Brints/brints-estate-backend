@@ -7,12 +7,19 @@ const errorFormatter = ({ msg }: { msg: string }) => {
   return `${msg}`;
 };
 
+/**
+ * @description Validation for registration of new user
+ * @param {string} req
+ * @param {string} res
+ * @param {string} next
+ * @returns {object} error
+ */
+
 type ValidateUserRegistrationResponse = Response<
   unknown,
   Record<string, unknown>
 >;
 
-// validate user input for user registration
 export const validateUserRegistration = [
   body("fullname")
     .exists()
@@ -83,7 +90,14 @@ export const validateUserRegistration = [
   },
 ];
 
-// validate user input for verify email
+/**
+ * @description Validation to verify email address of new user
+ * @param {string} req
+ * @param {string} res
+ * @param {string} next
+ * @returns {object} error
+ */
+
 export const validateVerifyEmail = [
   query("token")
     .exists()
@@ -116,7 +130,14 @@ export const validateVerifyEmail = [
   },
 ];
 
-// validate user input for login
+/**
+ * @description Validation to login users
+ * @param {string} req
+ * @param {string} res
+ * @param {string} next
+ * @returns {object} error
+ */
+
 export const validateLogin = [
   body("email")
     .exists()
@@ -149,7 +170,14 @@ export const validateLogin = [
   },
 ];
 
-// validate user input for forgot password
+/**
+ * @description Validation for forgot password
+ * @param {string} req
+ * @param {string} res
+ * @param {string} next
+ * @returns {object} error
+ */
+
 export const validateForgotPassword = [
   body("email")
     .exists()
@@ -175,6 +203,14 @@ export const validateForgotPassword = [
     return next();
   },
 ];
+
+/**
+ * @description Validation to resend verification token
+ * @param {string} req
+ * @param {string} res
+ * @param {string} next
+ * @returns {object} error
+ */
 
 // validate input for resend verification token
 export const validateResendVerificationToken = [

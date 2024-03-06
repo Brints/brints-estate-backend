@@ -303,3 +303,23 @@ export const validateResetPassword = [
  * @param {string} next
  * @returns {object} error
  */
+
+export const validateChangePassword = [
+  body("oldPassword")
+    .exists()
+    .withMessage("Old Password Field is required.")
+    .notEmpty()
+    .withMessage("Old Password cannot be empty.")
+    .isString()
+    .withMessage("Old Password must be a string.")
+    .trim(),
+  body("newPassword")
+    .exists()
+    .withMessage("New Password Field is required.")
+    .notEmpty()
+    .withMessage("Please provide your new password")
+    .isLength({ min: 8, max: 16 })
+    .withMessage(
+      "Password should not be less than 8 characters and not more than 16 characters."
+    ),
+];

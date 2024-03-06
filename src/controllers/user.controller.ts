@@ -679,7 +679,7 @@ export const forgotPassword = tryCatch(
     }
 
     // Generate verification token
-    const resetPasswordToken = generateVerificationToken();
+    const resetPasswordToken: string = generateVerificationToken();
 
     // Set verification token expire date to 3 hours
     const resetPasswordExpire = new Date();
@@ -699,7 +699,7 @@ export const forgotPassword = tryCatch(
     await user.save();
 
     // create verification url
-    const resetPasswordUrl = `${process.env["BASE_URL"]}/user/reset-password/${resetPasswordToken}/${user.email}`;
+    const resetPasswordUrl = `${process.env["BASE_URL"]}/user/reset-password/${user.resetPasswordToken}/${user.email}`;
 
     // Send verification email
     await emailService.sendEmail(

@@ -72,6 +72,8 @@ export const validateUserRegistration = [
     .withMessage("Required Field")
     .notEmpty()
     .withMessage("Phone number is required.")
+    .isMobilePhone("any")
+    .withMessage("Provide a valid phone number.")
     .trim(),
 
   (req: Request, res: ValidateUserResponse, next: NextFunction) => {

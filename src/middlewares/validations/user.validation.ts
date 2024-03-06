@@ -331,5 +331,8 @@ export const validateChangePassword = [
     .exists()
     .withMessage("Confirm Password Field is required.")
     .notEmpty()
-    .withMessage("Confirm Password cannot be empty."),
+    .withMessage("Confirm Password cannot be empty.")
+    .equals("newPassword")
+    .withMessage("Passwors do not match.")
+    .trim(),
 ];

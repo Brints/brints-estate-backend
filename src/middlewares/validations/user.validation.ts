@@ -212,7 +212,6 @@ export const validateForgotPassword = [
  * @returns {object} error
  */
 
-// validate input for resend verification token
 export const validateResendVerificationToken = [
   body("email")
     .exists()
@@ -239,7 +238,14 @@ export const validateResendVerificationToken = [
   },
 ];
 
-// validation for reset password
+/**
+ * @description Validation to reset password
+ * @param {string} req
+ * @param {string} res
+ * @param {string} next
+ * @returns {object} error
+ */
+
 export const validateResetPassword = [
   param("email")
     .exists()

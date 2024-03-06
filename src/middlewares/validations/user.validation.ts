@@ -15,10 +15,7 @@ const errorFormatter = ({ msg }: { msg: string }) => {
  * @returns {object} error
  */
 
-type ValidateUserRegistrationResponse = Response<
-  unknown,
-  Record<string, unknown>
->;
+type ValidateUserResponse = Response<unknown, Record<string, unknown>>;
 
 export const validateUserRegistration = [
   body("fullname")
@@ -77,7 +74,7 @@ export const validateUserRegistration = [
     .withMessage("Phone number is required.")
     .trim(),
 
-  (req: Request, res: ValidateUserRegistrationResponse, next: NextFunction) => {
+  (req: Request, res: ValidateUserResponse, next: NextFunction) => {
     const errors = validationResult(req).formatWith(errorFormatter);
     if (!errors.isEmpty()) {
       const err = {
@@ -117,7 +114,7 @@ export const validateVerifyEmail = [
     .normalizeEmail()
     .trim(),
 
-  (req: Request, res: ValidateUserRegistrationResponse, next: NextFunction) => {
+  (req: Request, res: ValidateUserResponse, next: NextFunction) => {
     const errors = validationResult(req).formatWith(errorFormatter);
     if (!errors.isEmpty()) {
       const err = {
@@ -157,7 +154,7 @@ export const validateLogin = [
     .withMessage("Password is required.")
     .trim(),
 
-  (req: Request, res: ValidateUserRegistrationResponse, next: NextFunction) => {
+  (req: Request, res: ValidateUserResponse, next: NextFunction) => {
     const errors = validationResult(req).formatWith(errorFormatter);
     if (!errors.isEmpty()) {
       const err = {
@@ -191,7 +188,7 @@ export const validateForgotPassword = [
     .toLowerCase()
     .trim(),
 
-  (req: Request, res: ValidateUserRegistrationResponse, next: NextFunction) => {
+  (req: Request, res: ValidateUserResponse, next: NextFunction) => {
     const errors = validationResult(req).formatWith(errorFormatter);
     if (!errors.isEmpty()) {
       const err = {
@@ -225,7 +222,7 @@ export const validateResendVerificationToken = [
     .toLowerCase()
     .trim(),
 
-  (req: Request, res: ValidateUserRegistrationResponse, next: NextFunction) => {
+  (req: Request, res: ValidateUserResponse, next: NextFunction) => {
     const errors = validationResult(req).formatWith(errorFormatter);
     if (!errors.isEmpty()) {
       const err = {
@@ -283,7 +280,7 @@ export const validateResetPassword = [
     .withMessage("Confirm password cannot be empty.")
     .trim(),
 
-  (req: Request, res: ValidateUserRegistrationResponse, next: NextFunction) => {
+  (req: Request, res: ValidateUserResponse, next: NextFunction) => {
     const errors = validationResult(req).formatWith(errorFormatter);
     if (!errors.isEmpty()) {
       const err = {
@@ -335,4 +332,17 @@ export const validateChangePassword = [
     .equals("newPassword")
     .withMessage("Passwors do not match.")
     .trim(),
+
+  (req: Request, res: ValidateUserResponse, next: NextFunction) => {
+    const errors = validationResult(req).formatWith(errorFormatter);
+
+    if (!errors.isEmpty()) {
+      const err = {
+        message: errors.array().join(" ,"),
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+    return next();
+  },
 ];

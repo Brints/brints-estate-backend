@@ -834,15 +834,6 @@ export const changePassword = tryCatch(
     // Get user input
     const { oldPassword, newPassword, confirmPassword } = req.body;
 
-    // validate user inputs
-    if (!oldPassword || !newPassword || !confirmPassword) {
-      const err: UserError = {
-        message: "All fields are required",
-        statusCode: StatusCodes.BAD_REQUEST,
-      };
-      return errorResponse(res, err.message, err.statusCode);
-    }
-
     // Get user id from request object
     const userId = (req as unknown as UserObject).user;
 
@@ -854,6 +845,19 @@ export const changePassword = tryCatch(
       const err: UserError = {
         message: "User does not exist",
         statusCode: StatusCodes.NOT_FOUND,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // check if oldPassword is equal to the password in the database
+    const oldPasswordMatch = await BcryptHelper.comparePassword(
+      oldPassword,
+      user.password
+    );
+    if (!oldPasswordMatch) {
+      const err: UserError = {
+        message: "Your old password does not match.",
+        statusCode: StatusCodes.BAD_REQUEST,
       };
       return errorResponse(res, err.message, err.statusCode);
     }

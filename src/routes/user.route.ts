@@ -18,6 +18,7 @@ import {
   validateVerifyEmail,
   validateResendVerificationToken,
   validateResetPassword,
+  validateChangePassword,
 } from "../middlewares/validations/user.validation";
 
 const userRouter: Router = Router();
@@ -65,6 +66,7 @@ userRouter.post(
 userRouter.post(
   "/change-password",
   userAuthorization.authenticatedUser,
+  validateChangePassword,
   userController.changePassword
 );
 userRouter.post(

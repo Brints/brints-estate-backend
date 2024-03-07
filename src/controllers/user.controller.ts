@@ -185,7 +185,7 @@ export const registerUser = tryCatch(
       "0999",
     ];
 
-    const userMobileOperator = phone.slice(4, 8);
+    const userMobileOperator = phone.substring(4, 8);
     if (!mobileOperator.includes(userMobileOperator)) {
       const err: UserError = {
         message: `${userMobileOperator} is not a valid mobile operator.`,

@@ -12,3 +12,8 @@ declare interface ILocation extends Document {
   zipcode?: string;
   [key: string]: unknown;
 }
+
+declare type LocationResponse = ResponseData<ILocation>;
+declare type LocationError = ResponseData<Error>;
+
+export { ILocation, LocationResponse, LocationError };

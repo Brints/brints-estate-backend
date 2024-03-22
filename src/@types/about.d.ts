@@ -5,7 +5,7 @@ declare type ResponseData<T> = Response<T>;
 
 export interface IAbout extends Document {
   title: string;
-  description: string;
+  content: string;
   image: string[];
 }
 

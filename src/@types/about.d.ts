@@ -9,13 +9,32 @@ export interface IAbout extends Document {
   image: string[];
 }
 
-export interface IAboutResponse {
-  status: string;
+export interface AboutResponse {
   message: string;
   data: IAbout;
+  statusCode: number;
 }
 
-export interface IAboutResponseError {
-  status: string;
+export interface AboutResponseError {
   message: string;
+  statusCode: number;
+}
+
+export interface AboutObject extends Request {
+  about: IAbout;
+}
+
+export interface SuccessResponseData<T> {
+  message: string;
+  data: T;
+  statusCode: number;
+}
+
+export interface ErrorResponseData {
+  success: boolean;
+  error: {
+    type: string;
+    message: string;
+    statusCode: number;
+  };
 }

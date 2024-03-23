@@ -30,13 +30,3 @@ class AdminRouter {
 }
 
 export default AdminRouter.routes();
-
-// adminRouter.post(
-//   "/about/add",
-//   authMiddleware.authenticatedUser,
-//   upload,
-//   AboutController.createAbout
-// );
-// adminRouter.get("/about-us/:aboutId", AboutController.getAbout);
-
-// export default adminRouter;

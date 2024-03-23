@@ -101,7 +101,7 @@ export const createListing = tryCatch(
     const owner = userId._id as string;
 
     // add location to the database
-    const location = await Location.create({
+    const location = new Location({
       name,
       address,
       city: formattedCity,

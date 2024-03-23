@@ -21,3 +21,7 @@ export interface ErrorResponseData {
     statusCode: number;
   };
 }
+
+export type ResponseObject<T> = Response<
+  SuccessResponseData<T> | ErrorResponseData
+>;

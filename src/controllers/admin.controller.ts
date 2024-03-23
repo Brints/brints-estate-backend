@@ -12,6 +12,7 @@ import { cloudinary } from "../config/multer.config";
 import { UserObject } from "../@types";
 import { AboutRequestBody, IAbout } from "../@types/about";
 import { ResponseObject, ResponseError } from "../@types/base";
+import mongoose from "mongoose";
 
 /**
  * @description A class that contains all the controller methods for about us
@@ -117,11 +118,19 @@ export class AboutController {
         return errorResponse(res, error.message, error.statusCode);
       }
 
+      if (!mongoose.Types.ObjectId.isValid(aboutId)) {
+        const error: ResponseError = {
+          message: "Provide a valid id",
+          statusCode: StatusCodes.BAD_REQUEST,
+        };
+        return errorResponse(res, error.message, error.statusCode);
+      }
+
       const about = await About.findOne({ _id: aboutId });
 
       if (!about) {
         const error: ResponseError = {
-          message: "The about does not exist",
+          message: "About not found",
           statusCode: StatusCodes.NOT_FOUND,
         };
         return errorResponse(res, error.message, error.statusCode);

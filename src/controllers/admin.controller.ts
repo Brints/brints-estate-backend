@@ -28,7 +28,7 @@ import mongoose from "mongoose";
  * @returns {object} about
  */
 
-type AboutRequestObject = Request<unknown, unknown, AboutRequestBody, unknown>;
+type RequestObject = Request<unknown, unknown, AboutRequestBody, unknown>;
 type GetAbout = Request<unknown, unknown, unknown, unknown>;
 
 export class AboutController {
@@ -41,16 +41,22 @@ export class AboutController {
    */
   static createAbout = tryCatch(
     async (
-      req: AboutRequestObject,
+      req: RequestObject,
       res: ResponseObject<IAbout>
     ): Promise<unknown> => {
       const { title, content, image } = req.body;
 
-      console.log("Create about us controller.");
+      const userId = (req as unknown as UserObject).user;
 
-      const user = (req as unknown as UserObject).user;
+      if (!userId) {
+        const error: ResponseError = {
+          message: "You have to be logged in.",
+          statusCode: StatusCodes.UNAUTHORIZED,
+        };
+        return errorResponse(res, error.message, error.statusCode);
+      }
 
-      if (user.role !== "admin") {
+      if (userId.role !== "admin") {
         const error: ResponseError = {
           message: "Only admins can do this.",
           statusCode: StatusCodes.FORBIDDEN,
@@ -58,10 +64,20 @@ export class AboutController {
         return errorResponse(res, error.message, error.statusCode);
       }
 
-      if (!user.verified) {
+      if (!userId.verified) {
         const error: ResponseError = {
           message: "Please verify your account.",
           statusCode: StatusCodes.UNAUTHORIZED,
+        };
+        return errorResponse(res, error.message, error.statusCode);
+      }
+
+      //   check if an about us already exists
+      const aboutUs = await About.find();
+      if (aboutUs.length > 0) {
+        const error: ResponseError = {
+          message: "There can only be one about us.",
+          statusCode: StatusCodes.CONFLICT,
         };
         return errorResponse(res, error.message, error.statusCode);
       }
@@ -74,17 +90,14 @@ export class AboutController {
 
       // save image to cloudinary
       if (req.files) {
-        const { image } = req.files as { image: Express.Multer.File[] };
-
-        const imagePromises = image.map((img) => {
-          return cloudinary.uploader.upload(img.path);
+        const images = req.files as Express.Multer.File[];
+        const uploadImages = images.map(async (image) => {
+          const result = await cloudinary.uploader.upload(image.path);
+          return { url: result.secure_url, filename: result.public_id };
         });
 
-        const imageResults = await Promise.all(imagePromises);
-
-        about.image = imageResults.map((img) => {
-          return { url: img.secure_url, filename: img.public_id };
-        });
+        const imageResults = await Promise.all(uploadImages);
+        about.image = imageResults;
       }
 
       await about.save();

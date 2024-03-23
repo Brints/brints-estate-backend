@@ -28,6 +28,7 @@ import { ResponseObject, ResponseError } from "../@types/base";
  */
 
 type AboutRequestObject = Request<unknown, unknown, AboutRequestBody, unknown>;
+type GetAbout = Request<unknown, unknown, unknown, unknown>;
 
 export class AboutController {
   /**
@@ -92,6 +93,45 @@ export class AboutController {
         "Successfully created",
         about,
         StatusCodes.CREATED
+      );
+    }
+  );
+
+  /**
+   * @desc    Get about
+   * @route   GET /about
+   * @param  {Request} req
+   * @param  {Response} res
+   * @access  Private
+   */
+
+  static getAbout = tryCatch(
+    async (req: GetAbout, res: ResponseObject<IAbout>): Promise<unknown> => {
+      const { aboutId } = req.params as { aboutId: string };
+
+      if (!aboutId) {
+        const error: ResponseError = {
+          message: "You have to provide an id.",
+          statusCode: StatusCodes.BAD_REQUEST,
+        };
+        return errorResponse(res, error.message, error.statusCode);
+      }
+
+      const about = await About.findOne({ _id: aboutId });
+
+      if (!about) {
+        const error: ResponseError = {
+          message: "The about does not exist",
+          statusCode: StatusCodes.NOT_FOUND,
+        };
+        return errorResponse(res, error.message, error.statusCode);
+      }
+
+      return successResponse(
+        res,
+        "Successfully fetched",
+        about as IAbout,
+        StatusCodes.OK
       );
     }
   );
@@ -172,28 +212,3 @@ export class AboutController {
 //  */
 
 // type GetAbout = Request<unknown, unknown, unknown, unknown>;
-
-// export const getAbout = tryCatch(
-//   async (req: GetAbout, res: ResponseObject<IAbout>): Promise<unknown> => {
-//     const { aboutId } = req.params as { aboutId: string };
-
-//     // const user = (req as unknown as UserObject).user;
-
-//     if (!aboutId) {
-//       const error: ResponseError = {
-//         message: "You have to provide an id.",
-//         statusCode: StatusCodes.BAD_REQUEST,
-//       };
-//       return errorResponse(res, error.message, error.statusCode);
-//     }
-
-//     const about = await About.findOne({ _id: aboutId });
-
-//     return successResponse(
-//       res,
-//       "Successfully fetched",
-//       about as IAbout,
-//       StatusCodes.OK
-//     );
-//   }
-// );

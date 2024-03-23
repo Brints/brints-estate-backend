@@ -14,67 +14,186 @@ import { AboutRequestBody, IAbout } from "../@types/about";
 import { ResponseObject, ResponseError } from "../@types/base";
 
 /**
- * @desc    Create about
- * @route   POST /about
- * @param  {Request} req
- * @param  {Response} res
- * @access  Private
+ * @description A class that contains all the controller methods for about us
+ * @class AboutController
+ * @method createAbout
+ * @method getAbout
+ * @method updateAbout
+ * @method deleteAbout
+ * @access private
+ * @static
+ * @returns {object} response
+ * @returns {object} error
+ * @returns {object} about
  */
+
 type AboutRequestObject = Request<unknown, unknown, AboutRequestBody, unknown>;
 
-export const createAbout = tryCatch(
-  async (
-    req: AboutRequestObject,
-    res: ResponseObject<IAbout>
-  ): Promise<unknown> => {
-    const { title, content, image } = req.body;
+export class AboutController {
+  /**
+   * @desc    Create about
+   * @route   POST /about
+   * @param  {Request} req
+   * @param  {Response} res
+   * @access  Private
+   */
+  static createAbout = tryCatch(
+    async (
+      req: AboutRequestObject,
+      res: ResponseObject<IAbout>
+    ): Promise<unknown> => {
+      const { title, content, image } = req.body;
 
-    const user = (req as unknown as UserObject).user;
+      console.log("Create about us controller.");
 
-    if (user.role !== "admin") {
-      const error: ResponseError = {
-        message: "Only admins can do this.",
-        statusCode: StatusCodes.FORBIDDEN,
-      };
-      return errorResponse(res, error.message, error.statusCode);
-    }
+      const user = (req as unknown as UserObject).user;
 
-    if (!user.verified) {
-      const error: ResponseError = {
-        message: "Please verify your account.",
-        statusCode: StatusCodes.UNAUTHORIZED,
-      };
-      return errorResponse(res, error.message, error.statusCode);
-    }
+      if (user.role !== "admin") {
+        const error: ResponseError = {
+          message: "Only admins can do this.",
+          statusCode: StatusCodes.FORBIDDEN,
+        };
+        return errorResponse(res, error.message, error.statusCode);
+      }
 
-    const about = await About.create({
-      title,
-      content,
-      image,
-    });
+      if (!user.verified) {
+        const error: ResponseError = {
+          message: "Please verify your account.",
+          statusCode: StatusCodes.UNAUTHORIZED,
+        };
+        return errorResponse(res, error.message, error.statusCode);
+      }
 
-    // save image to cloudinary
-    if (req.files) {
-      const { image } = req.files as { image: Express.Multer.File[] };
-
-      const imagePromises = image.map((img) => {
-        return cloudinary.uploader.upload(img.path);
+      const about = await About.create({
+        title,
+        content,
+        image,
       });
 
-      const imageResults = await Promise.all(imagePromises);
+      // save image to cloudinary
+      if (req.files) {
+        const { image } = req.files as { image: Express.Multer.File[] };
 
-      about.image = imageResults.map((img) => {
-        return { url: img.secure_url, filename: img.public_id };
-      });
+        const imagePromises = image.map((img) => {
+          return cloudinary.uploader.upload(img.path);
+        });
+
+        const imageResults = await Promise.all(imagePromises);
+
+        about.image = imageResults.map((img) => {
+          return { url: img.secure_url, filename: img.public_id };
+        });
+      }
+
+      await about.save();
+
+      return successResponse(
+        res,
+        "Successfully created",
+        about,
+        StatusCodes.CREATED
+      );
     }
+  );
+}
 
-    await about.save();
+// /**
+//  * @desc    Create about
+//  * @route   POST /about
+//  * @param  {Request} req
+//  * @param  {Response} res
+//  * @access  Private
+//  */
+// type AboutRequestObject = Request<unknown, unknown, AboutRequestBody, unknown>;
 
-    return successResponse(
-      res,
-      "Successfully created",
-      about,
-      StatusCodes.CREATED
-    );
-  }
-);
+// export const createAbout = tryCatch(
+//   async (
+//     req: AboutRequestObject,
+//     res: ResponseObject<IAbout>
+//   ): Promise<unknown> => {
+//     const { title, content, image } = req.body;
+
+//     const user = (req as unknown as UserObject).user;
+
+//     if (user.role !== "admin") {
+//       const error: ResponseError = {
+//         message: "Only admins can do this.",
+//         statusCode: StatusCodes.FORBIDDEN,
+//       };
+//       return errorResponse(res, error.message, error.statusCode);
+//     }
+
+//     if (!user.verified) {
+//       const error: ResponseError = {
+//         message: "Please verify your account.",
+//         statusCode: StatusCodes.UNAUTHORIZED,
+//       };
+//       return errorResponse(res, error.message, error.statusCode);
+//     }
+
+//     const about = await About.create({
+//       title,
+//       content,
+//       image,
+//     });
+
+//     // save image to cloudinary
+//     if (req.files) {
+//       const { image } = req.files as { image: Express.Multer.File[] };
+
+//       const imagePromises = image.map((img) => {
+//         return cloudinary.uploader.upload(img.path);
+//       });
+
+//       const imageResults = await Promise.all(imagePromises);
+
+//       about.image = imageResults.map((img) => {
+//         return { url: img.secure_url, filename: img.public_id };
+//       });
+//     }
+
+//     await about.save();
+
+//     return successResponse(
+//       res,
+//       "Successfully created",
+//       about,
+//       StatusCodes.CREATED
+//     );
+//   }
+// );
+
+// /**
+//  * @desc    Get about
+//  * @route   GET /about
+//  * @param  {Request} req
+//  * @param  {Response} res
+//  * @access  Private
+//  */
+
+// type GetAbout = Request<unknown, unknown, unknown, unknown>;
+
+// export const getAbout = tryCatch(
+//   async (req: GetAbout, res: ResponseObject<IAbout>): Promise<unknown> => {
+//     const { aboutId } = req.params as { aboutId: string };
+
+//     // const user = (req as unknown as UserObject).user;
+
+//     if (!aboutId) {
+//       const error: ResponseError = {
+//         message: "You have to provide an id.",
+//         statusCode: StatusCodes.BAD_REQUEST,
+//       };
+//       return errorResponse(res, error.message, error.statusCode);
+//     }
+
+//     const about = await About.findOne({ _id: aboutId });
+
+//     return successResponse(
+//       res,
+//       "Successfully fetched",
+//       about as IAbout,
+//       StatusCodes.OK
+//     );
+//   }
+// );

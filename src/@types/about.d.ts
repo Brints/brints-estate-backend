@@ -3,13 +3,15 @@ import { Document } from "mongoose";
 export interface IAbout extends Document {
   title: string;
   content: string;
-  image: string[];
+  image: { url: string; filename: string }[];
+  [key: string]: unknown;
 }
 
-export interface AboutResponse {
-  message: string;
-  data: IAbout;
-  statusCode: number;
+export interface AboutRequestBody {
+  title: string;
+  content: string;
+  image: { url: string; filename: string }[];
+  [key: string]: unknown;
 }
 
 export interface AboutObject extends Request {

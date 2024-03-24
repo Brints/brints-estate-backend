@@ -14,14 +14,7 @@ const app: express.Application = express();
 import routes from "./routes/index.route";
 
 // configure middleware
-app.use(
-  cors({
-    origin: "https://estate.aniebietafia.me",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.use(cors());
 app.use(morgan("dev"));
 app.use(helmet());
 app.use(express.json());

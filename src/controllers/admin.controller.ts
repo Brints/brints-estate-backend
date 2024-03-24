@@ -12,7 +12,6 @@ import { cloudinary } from "../config/multer.config";
 import { UserObject } from "../@types";
 import { AboutRequestBody, IAbout } from "../@types/about";
 import { ResponseObject, ResponseError } from "../@types/base";
-import mongoose from "mongoose";
 
 /**
  * @description A class that contains all the controller methods for about us
@@ -120,26 +119,28 @@ export class AboutController {
    */
 
   static getAbout = tryCatch(
-    async (req: GetAbout, res: ResponseObject<IAbout>): Promise<unknown> => {
-      const { aboutId } = req.params as { aboutId: string };
+    async (_req: GetAbout, res: ResponseObject<IAbout>): Promise<unknown> => {
+      //   const { aboutId } = req.params as { aboutId: string };
 
-      if (!aboutId) {
-        const error: ResponseError = {
-          message: "You have to provide an id.",
-          statusCode: StatusCodes.BAD_REQUEST,
-        };
-        return errorResponse(res, error.message, error.statusCode);
-      }
+      //   if (!aboutId) {
+      //     const error: ResponseError = {
+      //       message: "You have to provide an id.",
+      //       statusCode: StatusCodes.BAD_REQUEST,
+      //     };
+      //     return errorResponse(res, error.message, error.statusCode);
+      //   }
 
-      if (!mongoose.Types.ObjectId.isValid(aboutId)) {
-        const error: ResponseError = {
-          message: "Provide a valid id",
-          statusCode: StatusCodes.BAD_REQUEST,
-        };
-        return errorResponse(res, error.message, error.statusCode);
-      }
+      //   if (!mongoose.Types.ObjectId.isValid(aboutId)) {
+      //     const error: ResponseError = {
+      //       message: "Provide a valid id",
+      //       statusCode: StatusCodes.BAD_REQUEST,
+      //     };
+      //     return errorResponse(res, error.message, error.statusCode);
+      //   }
 
-      const about = await About.findOne({ _id: aboutId });
+      //   const about = await About.findOne({ _id: aboutId });
+
+      const about = await About.find();
 
       if (!about) {
         const error: ResponseError = {
@@ -152,7 +153,7 @@ export class AboutController {
       return successResponse(
         res,
         "Successfully fetched",
-        about as IAbout,
+        about as unknown as IAbout,
         StatusCodes.OK
       );
     }

@@ -14,8 +14,8 @@ const app: express.Application = express();
 import routes from "./routes/index.route";
 
 // configure middleware
-app.use(morgan("dev"));
 app.use(cors());
+app.use(morgan("dev"));
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

@@ -146,16 +146,16 @@ export const createListing = tryCatch(
     await listing.save();
 
     // return success response
-    const data: IListing = listing;
+    const payload: IListing = listing;
     const success: SuccessResponseData<IListing> = {
       message: "Listing created successfully",
-      data,
+      payload,
       statusCode: StatusCodes.CREATED,
     };
     return successResponse(
       res,
       success.message,
-      success.data,
+      success.payload,
       success.statusCode
     );
   }
@@ -236,13 +236,13 @@ export const getAllListings = tryCatch(
     // return success response
     const success: SuccessResponseData<IListing> = {
       message: "Listings fetched successfully",
-      data: allListings as unknown as IListing,
+      payload: allListings as unknown as IListing,
       statusCode: StatusCodes.OK,
     };
     return successResponse(
       res,
       success.message,
-      success.data,
+      success.payload,
       success.statusCode
     );
   }
@@ -432,16 +432,16 @@ export const updateListing = tryCatch(
     await listing.save();
 
     // return success response
-    const data: IListing = listing;
+    const payload: IListing = listing;
     const success: SuccessResponseData<IListing> = {
       message: "Listing updated successfully",
-      data,
+      payload,
       statusCode: StatusCodes.OK,
     };
     return successResponse(
       res,
       success.message,
-      success.data,
+      success.payload,
       success.statusCode
     );
   }
@@ -494,13 +494,13 @@ export const deleteListing = tryCatch(
     // return success response
     const success: SuccessResponseData<IListing> = {
       message: "Listing deleted successfully",
-      data: {} as IListing,
+      payload: {} as IListing,
       statusCode: StatusCodes.OK,
     };
     return successResponse(
       res,
       success.message,
-      success.data,
+      success.payload,
       success.statusCode
     );
   }
@@ -527,14 +527,14 @@ export const getMyListings = tryCatch(
     // return success response
     const success: SuccessResponseData<IListing> = {
       message: "Listings fetched successfully",
-      data: listings as unknown as IListing,
+      payload: listings as unknown as IListing,
       statusCode: StatusCodes.OK,
     };
 
     return successResponse(
       res,
       success.message,
-      success.data,
+      success.payload,
       success.statusCode
     );
   }

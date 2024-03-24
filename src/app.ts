@@ -17,7 +17,8 @@ import routes from "./routes/index.route";
 app.use(
   cors({
     origin: "https://estate.aniebietafia.me",
-    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );

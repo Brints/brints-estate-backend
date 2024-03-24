@@ -45,7 +45,7 @@ declare interface RegisterListingRequestBody {
 
 declare interface SuccessResponseData<T> {
   message: string;
-  data: T;
+  payload: T;
   statusCode: number;
 }
 

@@ -51,13 +51,13 @@ declare interface UserObject extends Request {
 
 declare interface SuccessResponseData<T> {
   message: string;
-  data: T;
+  payload: T;
   statusCode: number;
 }
 
 declare interface SuccessResponseDataWithToken<T> {
   message: string;
-  data: T;
+  payload: T;
   token: string;
   statusCode: number;
 }

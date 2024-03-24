@@ -11,7 +11,7 @@ declare interface IDiscount extends Document {
 
 declare interface DiscountResponse {
   message: string;
-  data: IDiscount;
+  payload: IDiscount;
   statusCode: number;
 }
 
@@ -26,7 +26,7 @@ declare interface DiscountObject extends Request {
 
 declare interface SuccessResponseData<T> {
   message: string;
-  data: T;
+  payload: T;
   statusCode: number;
 }
 

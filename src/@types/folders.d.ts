@@ -11,7 +11,7 @@ declare interface IFolder extends Document {
 
 declare interface SuccessResponseData<T> {
   message: string;
-  data: T;
+  payload: T;
   statusCode: number;
 }
 

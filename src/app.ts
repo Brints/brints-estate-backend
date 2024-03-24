@@ -14,7 +14,11 @@ const app: express.Application = express();
 import routes from "./routes/index.route";
 
 // configure middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://estate.aniebietafia.me",
+  })
+);
 app.use(morgan("dev"));
 app.use(helmet());
 app.use(express.json());

@@ -7,12 +7,12 @@ import { SuccessResponseData, ErrorResponseData } from "../../@types";
 export const successResponse = <T>(
   res: Response<SuccessResponseData<T>>,
   message: string,
-  data: T,
+  payload: T,
   statusCode: number = StatusCodes.OK
 ): Response<SuccessResponseData<T>> => {
   const successData: SuccessResponseData<T> = {
     message,
-    data,
+    payload,
     statusCode,
   };
   return res.status(statusCode).json(successData);

@@ -23,7 +23,7 @@ class AdminRouter {
       upload,
       AboutController.createAbout
     );
-    adminRouter.get("/about-us/:aboutId", AboutController.getAbout);
+    adminRouter.get("/about-us", AboutController.getAbout);
 
     return adminRouter;
   }

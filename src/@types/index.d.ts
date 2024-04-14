@@ -20,20 +20,14 @@ declare interface IUser extends Document {
 }
 
 declare interface RegisterUserRequestBody {
-  avatar?: { url: string; filename: string }[];
+  avatar?: string;
   fullname: string;
   email: string;
   password: string;
   confirmPassword: string;
   gender: string;
   phone: string;
-  role: string;
-  verified: boolean;
-  last_login?: Date | null;
-  verificationToken?: string;
-  verificationTokenExpire?: Date | null;
-  resetPasswordToken?: string;
-  resetPasswordExpire?: Date | null;
+  code: string;
 }
 
 declare type UserResponse = Response<

@@ -51,6 +51,7 @@ export const registerUser = tryCatch(
       gender,
       password,
       confirmPassword,
+      code,
     } = req.body;
 
     // Handle gender ValidationError
@@ -62,145 +63,15 @@ export const registerUser = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    const countryCode = ["+234", "+1", "+44", "+27", "+254", "+233", "+20"];
-    const userCountryCode = phone.slice(0, 4);
-    if (!countryCode.includes(userCountryCode)) {
+    if (!code.slice(0, 1).startsWith("+")) {
       const err: UserError = {
-        message: "Provide a valid country code. Example: +234",
+        message: "Zip Code is not valid.",
         statusCode: StatusCodes.BAD_REQUEST,
       };
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    const mobileOperator = [
-      "0803",
-      "0806",
-      "0802",
-      "0808",
-      "0805",
-      "0807",
-      "0809",
-      "0812",
-      "0813",
-      "0814",
-      "0815",
-      "0816",
-      "0817",
-      "0818",
-      "0819",
-      "0902",
-      "0903",
-      "0905",
-      "0906",
-      "0907",
-      "0909",
-      "0910",
-      "0912",
-      "0913",
-      "0914",
-      "0915",
-      "0916",
-      "0917",
-      "0918",
-      "0919",
-      "0920",
-      "0921",
-      "0922",
-      "0923",
-      "0924",
-      "0925",
-      "0926",
-      "0927",
-      "0928",
-      "0929",
-      "0930",
-      "0931",
-      "0932",
-      "0933",
-      "0934",
-      "0935",
-      "0936",
-      "0937",
-      "0938",
-      "0939",
-      "0940",
-      "0941",
-      "0942",
-      "0943",
-      "0944",
-      "0945",
-      "0946",
-      "0947",
-      "0948",
-      "0949",
-      "0950",
-      "0951",
-      "0952",
-      "0953",
-      "0954",
-      "0955",
-      "0956",
-      "0957",
-      "0958",
-      "0959",
-      "0960",
-      "0961",
-      "0962",
-      "0963",
-      "0964",
-      "0965",
-      "0966",
-      "0967",
-      "0968",
-      "0969",
-      "0970",
-      "0971",
-      "0972",
-      "0973",
-      "0974",
-      "0975",
-      "0976",
-      "0977",
-      "0978",
-      "0979",
-      "0980",
-      "0981",
-      "0982",
-      "0983",
-      "0984",
-      "0985",
-      "0986",
-      "0987",
-      "0988",
-      "0989",
-      "0990",
-      "0991",
-      "0992",
-      "0993",
-      "0994",
-      "0995",
-      "0996",
-      "0997",
-      "0998",
-      "0999",
-    ];
-
-    const userMobileOperator = phone.substring(4, 8);
-    if (!mobileOperator.includes(userMobileOperator)) {
-      const err: UserError = {
-        message: `${userMobileOperator} is not a valid mobile operator.`,
-        statusCode: StatusCodes.BAD_REQUEST,
-      };
-      return errorResponse(res, err.message, err.statusCode);
-    }
-
-    if (phone.slice(8).length !== 7) {
-      const err: UserError = {
-        message: "Phone number must be 11 digits",
-        statusCode: StatusCodes.BAD_REQUEST,
-      };
-      return errorResponse(res, err.message, err.statusCode);
-    }
+    const fullPhone = `${code}${phone}`;
 
     // Check if user already exist
     const user = await User.findOne({ email });
@@ -278,7 +149,9 @@ export const registerUser = tryCatch(
         url: "https://e7.pngegg.com/pngimages/961/57/png-clipart-computer-icons-icon-design-apple-icon-format-female-avatar-desktop-wallpaper-silhouette-thumbnail.png",
         filename: "female avatar",
       });
-    } else {
+    }
+
+    if (!avatar && gender === "male") {
       defaultAvatar.push({
         url: "https://w7.pngwing.com/pngs/831/88/png-transparent-user-profile-computer-icons-user-interface-mystique-miscellaneous-user-interface-design-smile-thumbnail.png",
         filename: "male avatar",
@@ -291,7 +164,7 @@ export const registerUser = tryCatch(
       fullname: capitalizedFullname,
       email,
       password: hashedPassword,
-      phone,
+      phone: fullPhone,
       role,
       gender,
       last_login: null,
@@ -319,8 +192,6 @@ export const registerUser = tryCatch(
 
     // Send verification email
     await registerEmailTemplate(newUser);
-
-    // delete newUser.password
 
     // Return user object with few details
     const userResponse = {

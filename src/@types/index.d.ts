@@ -20,7 +20,7 @@ declare interface IUser extends Document {
 }
 
 declare interface RegisterUserRequestBody {
-  avatar?: string;
+  avatar?: { url: string; filename: string }[];
   fullname: string;
   email: string;
   password: string;

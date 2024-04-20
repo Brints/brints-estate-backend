@@ -594,10 +594,7 @@ export const getUserProfile = tryCatch(
     // Find user by id
     const user = await User.findOne({ _id: userId }).select({
       password: 0,
-      verificationToken: 0,
-      verificationTokenExpire: 0,
-      resetPasswordExpire: 0,
-      resetPasswordToken: 0,
+      userAuth: 0,
     });
 
     // Check if user exist
@@ -661,7 +658,7 @@ export const generateNewVerificationToken = tryCatch(
     }
 
     // Check if user is verified
-    if (user.verified) {
+    if (user.userAuth.status === "verified") {
       const err: UserError = {
         message: "User is already verified",
         statusCode: StatusCodes.BAD_REQUEST,
@@ -669,22 +666,36 @@ export const generateNewVerificationToken = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
+    const userAuth = await UserAuthModel.findOne({ _id: user.userAuth });
+
     // Generate verification token
     const verificationToken = generateVerificationToken();
 
     // Set verification token expire date to 3 hours
+    // const verificationTokenExpire = new Date();
+    // verificationTokenExpire.setHours(verificationTokenExpire.getHours() + 3);
+
+    // Set verification token expire date to 15 minutes
     const verificationTokenExpire = new Date();
-    verificationTokenExpire.setHours(verificationTokenExpire.getHours() + 3);
+    verificationTokenExpire.setMinutes(
+      verificationTokenExpire.getMinutes() + 15
+    );
 
     // Set verification token and verification token expire date
-    user.verificationToken = verificationToken;
-    user.verificationTokenExpire = verificationTokenExpire;
+    // user.verificationToken = verificationToken;
+    // user.verificationTokenExpire = verificationTokenExpire;
+
+    if (userAuth) {
+      userAuth.verificationToken = verificationToken;
+      userAuth.tokenExpiration = verificationTokenExpire;
+      await userAuth.save();
+    }
 
     // Save user to database
     await user.save();
 
     // Send verification email
-    await generateNewVerificationTokenTemplate(user);
+    await generateNewVerificationTokenTemplate(user, user.userAuth);
 
     // Return success response
     return successResponse(

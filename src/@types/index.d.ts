@@ -19,6 +19,16 @@ declare interface IUser extends Document {
   [key: string]: unknown;
 }
 
+declare interface UserAuth extends Document {
+  userId: string;
+  otp: string;
+  verificationToken: string;
+  resetPasswordToken?: string;
+  tokenExpiration: Date | null;
+  emailVerified: boolean;
+  phoneNumberVerified: boolean;
+}
+
 declare interface RegisterUserRequestBody {
   avatar?: { url: string; filename: string }[];
   fullname: string;

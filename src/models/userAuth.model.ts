@@ -21,4 +21,4 @@ const userAuth: Schema = new Schema(
 );
 
 // UserAuth model
-export const UserAuthModel = model<UserAuth>("UserAuth", userAuth);
+export const UserAuth = model<UserAuth>("UserAuth", userAuth);

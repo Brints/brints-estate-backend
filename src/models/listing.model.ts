@@ -10,7 +10,7 @@ const listingSchema: Schema = new Schema(
     price: { type: Number, required: true },
     discount: { type: Number, default: 0 },
     location: { type: Schema.Types.ObjectId, ref: "Location" },
-    owner: { type: Schema.Types.ObjectId, ref: "User" },
+    owner: { type: Schema.Types.ObjectId, ref: "User", required: true },
     status: {
       type: String,
       enum: ["rent", "sale", "taken"],

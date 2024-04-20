@@ -172,20 +172,6 @@ export const registerUser = tryCatch(
       });
     }
 
-    // Create user auth
-    const userAuth: UserAuth = new UserAuthModel({
-      otp,
-      verificationToken,
-      resetPasswordToken,
-      tokenExpiration: verificationTokenExpire,
-      emailVerified: false,
-      phoneNumberVerified: false,
-      status: "pending",
-    });
-
-    // Save user auth to database
-    await userAuth.save();
-
     const newUser: IUser = new User({
       avatar: avatar !== undefined && avatar ? avatar : defaultAvatar,
       fullname: capitalizedFullname,
@@ -195,11 +181,7 @@ export const registerUser = tryCatch(
       role,
       gender,
       last_login: null,
-      userAuth: userAuth._id as string,
     });
-
-    // Save user to database
-    await newUser.save();
 
     // Upload images to cloudinary
     if (req.files) {
@@ -212,6 +194,24 @@ export const registerUser = tryCatch(
       );
       newUser.avatar = imagesUrl;
     }
+
+    // Save user to database
+    await newUser.save();
+
+    // Create user auth
+    const userAuth: UserAuth = new UserAuthModel({
+      otp,
+      verificationToken,
+      resetPasswordToken,
+      tokenExpiration: verificationTokenExpire,
+      emailVerified: false,
+      phoneNumberVerified: false,
+      status: "pending",
+      userId: newUser._id as string,
+    });
+
+    // Save user auth to database
+    await userAuth.save();
 
     // Send OTP to user phone number
     await twilioSMS.sendOtp(newUser.phone, otp);
@@ -228,7 +228,6 @@ export const registerUser = tryCatch(
       phone: newUser.phone,
       role: newUser.role,
       last_login: newUser.last_login,
-      // verified: userAuth.status === "verified" ? true : false,
     };
 
     // Return success response
@@ -396,9 +395,11 @@ export const verifyEmail = tryCatch(
     const { token, email }: verifyEmailParams = req.query as verifyEmailParams;
 
     // Find user by email
-    const user = await User.findOne({ email });
+    const user = (await User.findOne({ email })) as IUser;
 
-    const userAuth = await UserAuthModel.findOne({ _id: user?.userAuth });
+    const userAuth = (await UserAuthModel.findOne({
+      userId: user._id as string,
+    })) as UserAuth;
 
     // Check if user exist
     if (!user) {
@@ -409,7 +410,7 @@ export const verifyEmail = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    if (userAuth?.status === "verified") {
+    if (userAuth.status === "verified") {
       const err: UserError = {
         message: "User is already verified",
         statusCode: StatusCodes.BAD_REQUEST,
@@ -417,7 +418,7 @@ export const verifyEmail = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    if (userAuth?.verificationToken !== token) {
+    if (userAuth.verificationToken !== token) {
       const err: UserError = {
         message: "Invalid verification token",
         statusCode: StatusCodes.BAD_REQUEST,
@@ -457,18 +458,47 @@ export const verifyEmail = tryCatch(
 
 /**
  * @description Verify user phone number
- * @route POST /user/verify-phone/:otp
+ * @route POST /user/verify-phone/:phone
  * @param {Request} req
  * @param {Response} res
  * @returns {JSON} message
  */
 
-// type VerifyPhone = Request<unknown, unknown, verifyPhoneParams, unknown>;
+type VerifyPhone = Request<unknown, unknown, verifyPhoneParams, unknown>;
 
-// export const verifyPhoneNumber = tryCatch(async (req: VerifyPhone, res: UserResponse) => {
-//   const { otp } = req.body;
+export const verifyPhoneNumber = tryCatch(
+  async (req: VerifyPhone, res: UserResponse) => {
+    const { otp } = req.body;
+    const { phone } = req.params as { phone: string };
 
-// });
+    const user = (await User.findOne({ phone })) as IUser;
+
+    const userAuth = (await UserAuthModel.findOne({
+      userId: user._id as string,
+    })) as UserAuth;
+
+    if (userAuth.otp !== otp) {
+      const err: UserError = {
+        message: "Invalid OTP",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    userAuth.phoneNumberVerified = true;
+    userAuth.otp = "";
+
+    await userAuth.save();
+
+    // Return success response
+    return successResponse(
+      res,
+      "Phone number verified successfully",
+      {} as IUser,
+      StatusCodes.OK
+    );
+  }
+);
 
 /**
  * @description Login user
@@ -504,9 +534,11 @@ export const loginUser = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    const userAuth = await UserAuthModel.findOne({ _id: user.userAuth });
+    const userAuth = (await UserAuthModel.findOne({
+      userId: user._id as string,
+    })) as UserAuth;
 
-    if (userAuth?.status !== "verified") {
+    if (userAuth.status !== "verified") {
       const err: UserError = {
         message:
           "Your account has not been verified. Please check your email to verify your account.",
@@ -657,8 +689,12 @@ export const generateNewVerificationToken = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
+    const userAuth = (await UserAuthModel.findOne({
+      userId: user._id as string,
+    })) as UserAuth;
+
     // Check if user is verified
-    if (user.userAuth.status === "verified") {
+    if (userAuth.status === "verified") {
       const err: UserError = {
         message: "User is already verified",
         statusCode: StatusCodes.BAD_REQUEST,
@@ -666,10 +702,8 @@ export const generateNewVerificationToken = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    const userAuth = await UserAuthModel.findOne({ _id: user.userAuth });
-
     // Generate verification token
-    const verificationToken = generateVerificationToken();
+    const resetPasswordToken = generateVerificationToken();
 
     // Set verification token expire date to 3 hours
     // const verificationTokenExpire = new Date();
@@ -685,17 +719,13 @@ export const generateNewVerificationToken = tryCatch(
     // user.verificationToken = verificationToken;
     // user.verificationTokenExpire = verificationTokenExpire;
 
-    if (userAuth) {
-      userAuth.verificationToken = verificationToken;
-      userAuth.tokenExpiration = verificationTokenExpire;
-      await userAuth.save();
-    }
+    userAuth.resetPasswordToken = resetPasswordToken;
+    userAuth.tokenExpiration = verificationTokenExpire;
 
-    // Save user to database
-    await user.save();
+    await userAuth.save();
 
     // Send verification email
-    await generateNewVerificationTokenTemplate(user, user.userAuth);
+    await generateNewVerificationTokenTemplate(user, userAuth);
 
     // Return success response
     return successResponse(
@@ -748,28 +778,30 @@ export const forgotPassword = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
+    const userAuth = (await UserAuthModel.findOne({
+      userId: user._id as string,
+    })) as UserAuth;
+
     // Generate verification token
     const resetPasswordToken: string = generateVerificationToken();
 
-    // Set verification token expire date to 3 hours
-    const resetPasswordExpire = new Date();
-    resetPasswordExpire.setHours(resetPasswordExpire.getHours() + 3);
+    // Set verification token expire date to 15 minutes
+    const tokenExpiration = new Date();
+    tokenExpiration.setMinutes(tokenExpiration.getMinutes() + 15);
 
-    // time verification token expires in hours
     const expiration =
-      Math.round(
-        (resetPasswordExpire.getTime() - new Date().getTime()) / 3600000
-      ) + " hours";
+      Math.round((tokenExpiration.getTime() - new Date().getTime()) / 60000) +
+      " minutes";
 
     // Set verification token and verification token expire date
-    user.resetPasswordToken = resetPasswordToken;
-    user.resetPasswordExpire = resetPasswordExpire;
+    userAuth.resetPasswordToken = resetPasswordToken;
+    userAuth.tokenExpiration = tokenExpiration;
 
     // Save user to database
     await user.save();
 
     // create verification url
-    const resetPasswordUrl = `${process.env["BASE_URL"]}/user/reset-password/${user.resetPasswordToken}/${user.email}`;
+    const resetPasswordUrl = `${process.env["BASE_URL"]}/user/reset-password/${userAuth.resetPasswordToken}/${user.email}`;
 
     // Send verification email
     await emailService.sendEmail(
@@ -830,8 +862,12 @@ export const resetPassword = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
+    const userAuth = (await UserAuthModel.findOne({
+      userId: user._id as string,
+    })) as UserAuth;
+
     // Check if reset password token is valid
-    if (user.resetPasswordToken !== token) {
+    if (userAuth.resetPasswordToken !== token) {
       const err: UserError = {
         message: "Invalid reset password token",
         statusCode: StatusCodes.BAD_REQUEST,
@@ -840,7 +876,7 @@ export const resetPassword = tryCatch(
     }
 
     // Check if reset password token is expired
-    if (user.resetPasswordExpire && user.resetPasswordExpire < new Date()) {
+    if (userAuth.tokenExpiration && userAuth.tokenExpiration < new Date()) {
       const err: UserError = {
         message: "Reset password token has expired",
         statusCode: StatusCodes.BAD_REQUEST,
@@ -866,8 +902,10 @@ export const resetPassword = tryCatch(
 
     // Set user password
     user.password = hashedPassword;
-    user.resetPasswordToken = "";
-    user.resetPasswordExpire = null;
+    userAuth.resetPasswordToken = "";
+    userAuth.tokenExpiration = null;
+
+    await userAuth.save();
 
     // Save user to database
     await user.save();

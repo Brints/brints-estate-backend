@@ -8,8 +8,12 @@ import { ParamsDictionary } from "express-serve-static-core";
 import tryCatch from "../utils/lib/try-catch.lib";
 import { successResponse, errorResponse } from "../utils/lib/response.lib";
 import { User } from "../models/user.model";
+import { UserAuthModel } from "../models/userAuth.model";
 import BcryptHelper from "../utils/helpers/bcrypt.helper";
-import { generateVerificationToken } from "../utils/lib/verification-token.lib";
+import {
+  generateVerificationToken,
+  generateOTP,
+} from "../utils/lib/verification-token.lib";
 import { emailService } from "../services/email.service";
 import {
   registerEmailTemplate,
@@ -21,7 +25,7 @@ import { cloudinary } from "../config/multer.config";
 import { generateToken } from "../utils/helpers/jwt.helper";
 
 // import interfaces
-import { IUser, UserResponse } from "../@types";
+import { IUser, UserResponse, UserAuth } from "../@types";
 import { RegisterUserRequestBody, UserError } from "../@types";
 import { SuccessResponseData, ErrorResponseData } from "../@types";
 import { verifyEmailParams } from "../@types";
@@ -78,7 +82,7 @@ export const registerUser = tryCatch(
     if (user) {
       const err: UserError = {
         message: "User already exist",
-        statusCode: StatusCodes.BAD_REQUEST,
+        statusCode: StatusCodes.CONFLICT,
       };
       return errorResponse(res, err.message, err.statusCode);
     }
@@ -134,11 +138,20 @@ export const registerUser = tryCatch(
     // Generate verification token
     const verificationToken = generateVerificationToken();
 
-    // Set verification token expire date to 3 hours
-    const verificationTokenExpire = new Date();
-    verificationTokenExpire.setHours(verificationTokenExpire.getHours() + 3);
+    // Generate OTP to verify phone number
+    const otp = generateOTP(6);
 
-    const resetPasswordExpire = null;
+    // Set verification token expire date to 3 hours
+    // const verificationTokenExpire = new Date();
+    // verificationTokenExpire.setHours(verificationTokenExpire.getHours() + 3);
+
+    // Set verification token expire date to 15 minutes
+    const verificationTokenExpire = new Date();
+    verificationTokenExpire.setMinutes(
+      verificationTokenExpire.getMinutes() + 15
+    );
+
+    // const resetPasswordExpire = null;
     const resetPasswordToken = "";
 
     const defaultAvatar: { url: string; filename: string }[] = [];
@@ -151,7 +164,7 @@ export const registerUser = tryCatch(
       });
     }
 
-    if (!avatar && gender === "male") {
+    if (avatar && avatar === undefined && gender === "male") {
       defaultAvatar.push({
         url: "https://w7.pngwing.com/pngs/831/88/png-transparent-user-profile-computer-icons-user-interface-mystique-miscellaneous-user-interface-design-smile-thumbnail.png",
         filename: "male avatar",
@@ -159,8 +172,24 @@ export const registerUser = tryCatch(
     }
 
     // Create user
+    // const newUser: IUser = new User({
+    //   avatar: avatar ? avatar : defaultAvatar,
+    //   fullname: capitalizedFullname,
+    //   email,
+    //   password: hashedPassword,
+    //   phone: fullPhone,
+    //   role,
+    //   gender,
+    //   last_login: null,
+    //   // verified: false,
+    //   // verificationToken,
+    //   // verificationTokenExpire,
+    //   // resetPasswordExpire,
+    //   // resetPasswordToken,
+    // });
+
     const newUser: IUser = new User({
-      avatar: avatar ? avatar : defaultAvatar,
+      avatar: avatar !== undefined && avatar ? avatar : defaultAvatar,
       fullname: capitalizedFullname,
       email,
       password: hashedPassword,
@@ -168,12 +197,10 @@ export const registerUser = tryCatch(
       role,
       gender,
       last_login: null,
-      verified: false,
-      verificationToken,
-      verificationTokenExpire,
-      resetPasswordExpire,
-      resetPasswordToken,
     });
+
+    // Save user to database
+    await newUser.save();
 
     // Upload images to cloudinary
     if (req.files) {
@@ -187,8 +214,20 @@ export const registerUser = tryCatch(
       newUser.avatar = imagesUrl;
     }
 
-    // Save user to database
-    await newUser.save();
+    // Create user auth
+    const userAuth: UserAuth = new UserAuthModel({
+      userId: newUser._id as string,
+      otp,
+      verificationToken,
+      resetPasswordToken,
+      tokenExpiration: verificationTokenExpire,
+      emailVerified: false,
+      phoneNumberVerified: false,
+      status: "pending",
+    });
+
+    // Save user auth to database
+    await userAuth.save();
 
     // Send verification email
     await registerEmailTemplate(newUser);
@@ -201,7 +240,6 @@ export const registerUser = tryCatch(
       gender: newUser.gender,
       phone: newUser.phone,
       role: newUser.role,
-      verified: newUser.verified,
       last_login: newUser.last_login,
     };
 

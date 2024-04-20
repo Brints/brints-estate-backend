@@ -398,6 +398,8 @@ export const verifyEmail = tryCatch(
     // Find user by email
     const user = await User.findOne({ email });
 
+    const userAuth = await UserAuthModel.findOne({ _id: user?.userAuth });
+
     // Check if user exist
     if (!user) {
       const err: UserError = {
@@ -407,7 +409,7 @@ export const verifyEmail = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    if (user.userAuth.status === "verified") {
+    if (userAuth?.status === "verified") {
       const err: UserError = {
         message: "User is already verified",
         statusCode: StatusCodes.BAD_REQUEST,
@@ -415,7 +417,7 @@ export const verifyEmail = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    if (user.userAuth.verificationToken !== token) {
+    if (userAuth?.verificationToken !== token) {
       const err: UserError = {
         message: "Invalid verification token",
         statusCode: StatusCodes.BAD_REQUEST,
@@ -423,10 +425,7 @@ export const verifyEmail = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    if (
-      user.userAuth.tokenExpiration &&
-      user.userAuth.tokenExpiration < new Date()
-    ) {
+    if (userAuth.tokenExpiration && userAuth.tokenExpiration < new Date()) {
       const err: UserError = {
         message: "Verification token has expired.",
         statusCode: StatusCodes.BAD_REQUEST,
@@ -434,19 +433,14 @@ export const verifyEmail = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    user.userAuth.emailVerified = true;
-    user.userAuth.verificationToken = "";
-    user.userAuth.tokenExpiration = null;
+    userAuth.emailVerified = true;
+    userAuth.verificationToken = "";
+    userAuth.tokenExpiration = null;
+
+    await userAuth.save();
 
     // Save user to database
     await user.save();
-
-    // userAuth.emailVerified = true;
-    // userAuth.verificationToken = "";
-    // userAuth.tokenExpiration = null;
-
-    // // Save user to database
-    // await userAuth.save();
 
     // TODO: Send welcome email
     await verifyEmailTemplate(user);
@@ -510,9 +504,7 @@ export const loginUser = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    const userAuth = await UserAuthModel.findOne({
-      userId: user._id as string,
-    });
+    const userAuth = await UserAuthModel.findOne({ _id: user.userAuth });
 
     if (userAuth?.status !== "verified") {
       const err: UserError = {

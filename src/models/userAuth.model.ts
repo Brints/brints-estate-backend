@@ -8,9 +8,14 @@ const userAuth: Schema = new Schema(
     otp: { type: String, required: true },
     verificationToken: { type: String, required: true },
     resetPasswordToken: { type: String },
-    tokenExpiration: { type: Date },
+    tokenExpiration: { type: Date, required: true },
     emailVerified: { type: Boolean, default: false },
     phoneNumberVerified: { type: Boolean, default: false },
+    status: {
+      type: String,
+      enum: ["pending", "verified", "expired"],
+      default: "pending",
+    },
   },
   { timestamps: true }
 );

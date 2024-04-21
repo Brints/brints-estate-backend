@@ -23,7 +23,6 @@ import {
 import { CapitalizeFirstLetter } from "../utils/helpers/user.helper";
 import { cloudinary } from "../config/multer.config";
 import { generateToken } from "../utils/helpers/jwt.helper";
-import { twilioSMS } from "../utils/lib/twilio.lib";
 
 // import interfaces
 import { IUser, UserResponse, UserAuth } from "../@types";
@@ -80,9 +79,20 @@ export const registerUser = tryCatch(
 
     // Check if user already exist
     const user = await User.findOne({ email });
+
     if (user) {
       const err: UserError = {
         message: "User already exist",
+        statusCode: StatusCodes.CONFLICT,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // check if phone number already exist
+    const phoneNumber = await User.findOne({ phone: fullPhone });
+    if (phoneNumber) {
+      const err: UserError = {
+        message: "Phone number already exist",
         statusCode: StatusCodes.CONFLICT,
       };
       return errorResponse(res, err.message, err.statusCode);
@@ -172,6 +182,8 @@ export const registerUser = tryCatch(
       });
     }
 
+    const verified = false;
+
     const newUser: IUser = new User({
       avatar: avatar !== undefined && avatar ? avatar : defaultAvatar,
       fullname: capitalizedFullname,
@@ -181,6 +193,7 @@ export const registerUser = tryCatch(
       role,
       gender,
       last_login: null,
+      verified,
     });
 
     // Upload images to cloudinary
@@ -214,7 +227,6 @@ export const registerUser = tryCatch(
     await userAuth.save();
 
     // Send OTP to user phone number
-    await twilioSMS.sendOtp(newUser.phone, otp);
 
     // Send verification email
     await registerEmailTemplate(newUser, userAuth);
@@ -228,6 +240,7 @@ export const registerUser = tryCatch(
       phone: newUser.phone,
       role: newUser.role,
       last_login: newUser.last_login,
+      verified: newUser.verified,
     };
 
     // Return success response
@@ -250,132 +263,132 @@ export const registerUser = tryCatch(
  * @access Public
  */
 
-// type GoogleSignUp = Request<unknown, unknown, unknown, unknown>;
+type GoogleSignUp = Request<unknown, unknown, unknown, unknown>;
 
-// export const googleSignUp = tryCatch(
-//   async (req: GoogleSignUp, res: UserResponse) => {
-//     const { email } = req.body as { email: string };
+export const googleSignUp = tryCatch(
+  async (req: GoogleSignUp, res: UserResponse) => {
+    const { email } = req.body as { email: string };
 
-//     // check if the user exists, login the user
-//     const user = await User.findOne({ email });
+    // check if the user exists, login the user
+    const user = await User.findOne({ email });
 
-//     if (user) {
-//       // generate the token
-//       const token = generateToken(
-//         { id: user._id },
-//         process.env["JWT_EXPIRES_IN"] as string
-//       );
+    if (user) {
+      // generate the token
+      const token = generateToken(
+        { id: user._id },
+        process.env["JWT_EXPIRES_IN"] as string
+      );
 
-//       if (user.avatar && user.avatar.length === 0 && user.gender === "female") {
-//         user.avatar.push({
-//           url: "https://e7.pngegg.com/pngimages/961/57/png-clipart-computer-icons-icon-design-apple-icon-format-female-avatar-desktop-wallpaper-silhouette-thumbnail.png",
-//           filename: "female avatar",
-//         });
-//       } else if (
-//         user.avatar &&
-//         user.avatar.length === 0 &&
-//         user.gender === "male"
-//       ) {
-//         user.avatar.push({
-//           url: "https://w7.pngwing.com/pngs/831/88/png-transparent-user-profile-computer-icons-user-interface-mystique-miscellaneous-user-interface-design-smile-thumbnail.png",
-//           filename: "male avatar",
-//         });
-//       }
+      if (user.avatar && user.avatar.length === 0 && user.gender === "female") {
+        user.avatar.push({
+          url: "https://e7.pngegg.com/pngimages/961/57/png-clipart-computer-icons-icon-design-apple-icon-format-female-avatar-desktop-wallpaper-silhouette-thumbnail.png",
+          filename: "female avatar",
+        });
+      } else if (
+        user.avatar &&
+        user.avatar.length === 0 &&
+        user.gender === "male"
+      ) {
+        user.avatar.push({
+          url: "https://w7.pngwing.com/pngs/831/88/png-transparent-user-profile-computer-icons-user-interface-mystique-miscellaneous-user-interface-design-smile-thumbnail.png",
+          filename: "male avatar",
+        });
+      }
 
-//       // set last login date
-//       user.last_login = new Date();
+      // set last login date
+      user.last_login = new Date();
 
-//       // format fullname
-//       user.fullname = CapitalizeFirstLetter.capitalizeFirstLetter(
-//         user.fullname
-//       );
+      // format fullname
+      user.fullname = CapitalizeFirstLetter.capitalizeFirstLetter(
+        user.fullname
+      );
 
-//       // save user to database
-//       await user.save();
+      // save user to database
+      await user.save();
 
-//       // return user object with few details
-//       const userResponse = {
-//         avatar: user.avatar,
-//         fullname: user.fullname,
-//         email: user.email,
-//         gender: user.gender,
-//         phone: user.phone,
-//         role: user.role,
-//         verified: user.verified,
-//         last_login: user.last_login,
-//         token,
-//       };
+      // return user object with few details
+      const userResponse = {
+        avatar: user.avatar,
+        fullname: user.fullname,
+        email: user.email,
+        gender: user.gender,
+        phone: user.phone,
+        role: user.role,
+        verified: user.verified,
+        last_login: user.last_login,
+        token,
+      };
 
-//       // return success response
-//       return successResponse(
-//         res,
-//         "User logged in successfully",
-//         userResponse as unknown as IUser,
-//         StatusCodes.OK
-//       );
-//     } else {
-//       const { avatar, fullname, email } = req.body as {
-//         avatar: string;
-//         fullname: string;
-//         email: string;
-//       };
+      // return success response
+      return successResponse(
+        res,
+        "User logged in successfully",
+        userResponse as unknown as IUser,
+        StatusCodes.OK
+      );
+    } else {
+      const { avatar, fullname, email } = req.body as {
+        avatar: string;
+        fullname: string;
+        email: string;
+      };
 
-//       // generate random strong password
-//       const randomPassword = Math.random().toString(36).slice(-10);
+      // generate random strong password
+      const randomPassword = Math.random().toString(36).slice(-10);
 
-//       // hash user password
-//       const hashedPassword = await BcryptHelper.hashPassword(randomPassword);
+      // hash user password
+      const hashedPassword = await BcryptHelper.hashPassword(randomPassword);
 
-//       // format fullname
-//       CapitalizeFirstLetter.capitalizeFirstLetter(fullname);
+      // format fullname
+      CapitalizeFirstLetter.capitalizeFirstLetter(fullname);
 
-//       // make user an admin if it is the first user
-//       const users = await User.find();
-//       const role = users.length === 0 ? "admin" : "user";
+      // make user an admin if it is the first user
+      const users = await User.find();
+      const role = users.length === 0 ? "admin" : "user";
 
-//       const defaultAvatar: { url: string; filename: string }[] = [];
-//       defaultAvatar.push({
-//         url: avatar,
-//         filename: "google avatar",
-//       });
+      const defaultAvatar: { url: string; filename: string }[] = [];
+      defaultAvatar.push({
+        url: avatar,
+        filename: "google avatar",
+      });
 
-//       // set default gender
-//       const gender = "male";
+      // set default gender
+      const gender = "male";
 
-//       // set default phone number
-//       const phone = "00000000000";
+      // set default phone number
+      const phone = "00000000000";
 
-//       // set verified to true
-//       const verified = true;
+      // set verified to true
+      const verified = true;
 
-//       // create new user
-//       const newUser: IUser = new User({
-//         avatar: defaultAvatar,
-//         fullname,
-//         email,
-//         password: hashedPassword,
-//         role,
-//         gender,
-//         phone,
-//         verified,
-//       });
+      // create new user
+      const newUser: IUser = new User({
+        avatar: defaultAvatar,
+        fullname,
+        email,
+        password: hashedPassword,
+        role,
+        gender,
+        phone,
+        verified,
+      });
 
-//       // save user to database
-//       await newUser.save();
+      // save user to database
+      await newUser.save();
 
-//       // send welcome email
-//       // await registerEmailTemplate(newUser);
+      // send welcome email
+      // await registerEmailTemplate(newUser);
 
-//       // return success response
-//       return successResponse(
-//         res,
-//         "Success! Please check your email to verify your account.",
-//         {} as IUser,
-//         StatusCodes.CREATED
-//       );
-//     }
-//   }
-// );
+      // return success response
+      return successResponse(
+        res,
+        "Success! Please check your email to verify your account.",
+        {} as IUser,
+        StatusCodes.CREATED
+      );
+    }
+  }
+);
 
 /**
  * @description Verify user email
@@ -538,15 +551,6 @@ export const loginUser = tryCatch(
       userId: user._id as string,
     })) as UserAuth;
 
-    if (userAuth.status !== "verified") {
-      const err: UserError = {
-        message:
-          "Your account has not been verified. Please check your email to verify your account.",
-        statusCode: StatusCodes.BAD_REQUEST,
-      };
-      return errorResponse(res, err.message, err.statusCode);
-    }
-
     // Check if password match
     const isMatch = await BcryptHelper.comparePassword(password, user.password);
     if (!isMatch) {
@@ -563,6 +567,17 @@ export const loginUser = tryCatch(
     ) {
       userAuth.status = "verified";
       await userAuth.save();
+    }
+
+    user.verified = userAuth.status === "verified" ? true : false;
+
+    if (!user.verified) {
+      const err: UserError = {
+        message:
+          "Your account has not been verified. Please check your email to verify your account.",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
     }
 
     // Generate token
@@ -585,7 +600,7 @@ export const loginUser = tryCatch(
       gender: user.gender,
       phone: user.phone,
       role: user.role,
-      verified: userAuth.status === "verified" ? true : false,
+      verified: user.verified,
       last_login: user.last_login,
       token,
     };

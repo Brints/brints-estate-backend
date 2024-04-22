@@ -162,6 +162,10 @@ export const registerUser = tryCatch(
       verificationTokenExpire.getMinutes() + 15
     );
 
+    // Set otp expire date to 15 minutes
+    const otpExpire = new Date();
+    otpExpire.setMinutes(otpExpire.getMinutes() + 15);
+
     // const resetPasswordExpire = null;
     const resetPasswordToken = "";
 
@@ -175,7 +179,7 @@ export const registerUser = tryCatch(
       });
     }
 
-    if (avatar && avatar === undefined && gender === "male") {
+    if (!avatar && gender === "male") {
       defaultAvatar.push({
         url: "https://w7.pngwing.com/pngs/831/88/png-transparent-user-profile-computer-icons-user-interface-mystique-miscellaneous-user-interface-design-smile-thumbnail.png",
         filename: "male avatar",
@@ -214,6 +218,7 @@ export const registerUser = tryCatch(
     // Create user auth
     const userAuth: UserAuth = new UserAuthModel({
       otp,
+      otpExpiration: otpExpire,
       verificationToken,
       resetPasswordToken,
       tokenExpiration: verificationTokenExpire,
@@ -451,7 +456,16 @@ export const verifyEmail = tryCatch(
     userAuth.verificationToken = "";
     userAuth.tokenExpiration = null;
 
+    if (
+      userAuth.emailVerified === true &&
+      userAuth.phoneNumberVerified === true
+    ) {
+      userAuth.status = "verified";
+    }
+
     await userAuth.save();
+
+    user.verified = userAuth.status === "verified" ? true : false;
 
     // Save user to database
     await user.save();
@@ -484,11 +498,43 @@ export const verifyPhoneNumber = tryCatch(
     const { otp } = req.body;
     const { phone } = req.params as { phone: string };
 
+    if (!phone) {
+      const err: UserError = {
+        message: "Phone number is required",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    if (!otp) {
+      const err: UserError = {
+        message: "OTP is required",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    if (phone.slice(0, 1) !== "+") {
+      const err: UserError = {
+        message: "Invalid phone number. Phone number must include country code",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
     const user = (await User.findOne({ phone })) as IUser;
 
     const userAuth = (await UserAuthModel.findOne({
       userId: user._id as string,
     })) as UserAuth;
+
+    if (user.verified && userAuth.phoneNumberVerified) {
+      const err: UserError = {
+        message: "User and Phone number already verified",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
 
     if (userAuth.otp !== otp) {
       const err: UserError = {
@@ -498,10 +544,30 @@ export const verifyPhoneNumber = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
+    if (userAuth.otpExpiration && userAuth.otpExpiration < new Date()) {
+      const err: UserError = {
+        message: "OTP has expired",
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
     userAuth.phoneNumberVerified = true;
     userAuth.otp = "";
+    userAuth.otpExpiration = null;
+
+    if (
+      userAuth.emailVerified === true &&
+      userAuth.phoneNumberVerified === true
+    ) {
+      userAuth.status = "verified";
+    }
 
     await userAuth.save();
+
+    user.verified = userAuth.status === "verified" ? true : false;
+
+    await user.save();
 
     // Return success response
     return successResponse(
@@ -547,10 +613,6 @@ export const loginUser = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    const userAuth = (await UserAuthModel.findOne({
-      userId: user._id as string,
-    })) as UserAuth;
-
     // Check if password match
     const isMatch = await BcryptHelper.comparePassword(password, user.password);
     if (!isMatch) {
@@ -560,16 +622,6 @@ export const loginUser = tryCatch(
       };
       return errorResponse(res, err.message, err.statusCode);
     }
-
-    if (
-      userAuth.emailVerified === true &&
-      userAuth.phoneNumberVerified === true
-    ) {
-      userAuth.status = "verified";
-      await userAuth.save();
-    }
-
-    user.verified = userAuth.status === "verified" ? true : false;
 
     if (!user.verified) {
       const err: UserError = {
@@ -602,6 +654,8 @@ export const loginUser = tryCatch(
       role: user.role,
       verified: user.verified,
       last_login: user.last_login,
+      createdAt: user["createdAt"],
+      updatedAt: user["updatedAt"],
       token,
     };
 

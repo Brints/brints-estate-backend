@@ -10,12 +10,7 @@ import { successResponse, errorResponse } from "../utils/lib/response.lib";
 import { UserObject } from "../@types";
 
 // import types
-import {
-  FolderResponse,
-  //FolderRequestBody,
-  FolderError,
-  IFolder,
-} from "../@types/folders";
+import { FolderResponse, FolderError, IFolder } from "../@types/folders";
 
 /**
  * @desc    Create folder
@@ -84,3 +79,34 @@ export const getFolders = tryCatch(
     );
   }
 );
+
+/**
+ * @desc    Get single folders
+ * @route   GET /folder
+ * @param  {Request} req
+ * @param  {Response} res
+ * @access  Private
+ * @returns {Promise<unknown>}
+ */
+
+// export const getFolder = tryCatch(async fu)
+
+export const getFolder = tryCatch(async function (
+  req: FolderRequestObject,
+  res: FolderResponse
+): Promise<unknown> {
+  const { folderId } = req.params;
+  // const user = (req as unknown as UserObject).user
+
+  if (!folderId) {
+    const error: FolderError = {
+      message: "Provide a Folder Id.",
+      statusCode: StatusCodes.BAD_REQUEST,
+    };
+    return errorResponse(res, error.message, error.statusCode);
+  }
+
+  const folder = await Folder.findOne({ _id: folderId });
+
+  return successResponse(res, "Successful", folder as IFolder, StatusCodes.OK);
+});

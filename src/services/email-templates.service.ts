@@ -1,15 +1,19 @@
 import { emailService } from "./email.service";
-import { IUser } from "../@types";
+import { IUser, UserAuth } from "../@types";
 
 // Register user email template
-export const registerEmailTemplate = async (user: IUser) => {
-  const { email, fullname, verificationToken, verificationTokenExpire } = user;
+export const registerEmailTemplate = async (
+  user: IUser,
+  userAuth: UserAuth
+) => {
+  const { email, fullname } = user;
+  const { verificationToken, tokenExpiration } = userAuth;
   const verificationUrl = `${process.env["FRONTEND_URL"]}/verify-email?token=${verificationToken}/email=${email}`;
+
   const expiration =
-    Math.round(
-      ((verificationTokenExpire as Date).getTime() - new Date().getTime()) /
-        3600000
-    ) + " hours";
+    Math.round((tokenExpiration as Date).getTime() - new Date().getTime()) /
+      60000 +
+    " minutes";
 
   const subject = "Verify your email";
   const html = `<h2>Hello, <span style="color: crimson">${
@@ -46,18 +50,20 @@ export const verifyEmailTemplate = async (user: IUser) => {
 };
 
 // Generate New Verification Token Email Template
-export const generateNewVerificationTokenTemplate = async (user: IUser) => {
-  const { email, fullname, verificationToken, verificationTokenExpire } = user;
+export const generateNewVerificationTokenTemplate = async (
+  user: IUser,
+  userAuth: UserAuth
+) => {
+  const { email, fullname } = user;
+  const { verificationToken, tokenExpiration } = userAuth;
 
   // set verification url
   const verificationUrl = `${process.env["BASE_URL"]}/user/verify-email/${verificationToken}/${email}`;
 
-  // time verification token expires
   const expiration =
-    Math.round(
-      ((verificationTokenExpire as Date).getTime() - new Date().getTime()) /
-        3600000
-    ) + " hours";
+    Math.round((tokenExpiration as Date).getTime() - new Date().getTime()) /
+      60000 +
+    " minutes";
 
   // email subject and html
   const subject = "New Verification Token";

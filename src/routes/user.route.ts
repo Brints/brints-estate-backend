@@ -36,6 +36,7 @@ userRouter.get(
   validateVerifyEmail,
   userController.verifyEmail
 );
+userRouter.post("/verify-phone/:phone", userController.verifyPhoneNumber);
 userRouter.post("/login", validateLogin, userController.loginUser);
 userRouter.get(
   "/profile",

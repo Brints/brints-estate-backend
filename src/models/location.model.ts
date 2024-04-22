@@ -6,8 +6,8 @@ const locationSchema: Schema = new Schema(
   {
     name: { type: String, trim: true },
     address: { type: String, required: true, trim: true },
-    city: { type: String, required: true, trim: true },
-    state: { type: String, required: true, trim: true },
+    town: { type: String, required: true, trim: true },
+    province: { type: String, required: true, trim: true },
     country: { type: String, required: true, trim: true },
     zipcode: { type: String, trim: true },
   },

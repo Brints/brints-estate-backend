@@ -16,12 +16,8 @@ const userSchema: Schema = new Schema(
       enum: ["admin", "user", "realtor", "landlord"],
       default: "user",
     },
-    verified: { type: Boolean, default: false },
     last_login: { type: Date },
-    verificationToken: { type: String, trim: true },
-    verificationTokenExpire: { type: Date },
-    resetPasswordToken: { type: String, trim: true },
-    resetPasswordExpire: { type: Date },
+    verified: { type: Boolean, required: true, default: false },
   },
   { timestamps: true }
 );

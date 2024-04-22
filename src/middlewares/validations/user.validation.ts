@@ -74,6 +74,14 @@ export const validateUserRegistration = [
     .withMessage("Phone number is required.")
     // .isMobilePhone("any", { strictMode: false })
     .trim(),
+  body("code")
+    .exists()
+    .withMessage("Required Field")
+    .notEmpty()
+    .withMessage("Code is required")
+    .isString()
+    .withMessage("Code should be a string")
+    .trim(),
 
   (req: Request, res: ValidateUserResponse, next: NextFunction) => {
     const errors = validationResult(req).formatWith(errorFormatter);
@@ -113,6 +121,43 @@ export const validateVerifyEmail = [
     .isString()
     .withMessage("Email should be a string")
     .normalizeEmail()
+    .trim(),
+
+  (req: Request, res: ValidateUserResponse, next: NextFunction) => {
+    const errors = validationResult(req).formatWith(errorFormatter);
+    if (!errors.isEmpty()) {
+      const err = {
+        message: errors.array().join(", "),
+        statusCode: StatusCodes.BAD_REQUEST,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+    return next();
+  },
+];
+
+/**
+ * @description Validation to verify phone number
+ * @param {string} req
+ * @param {string} res
+ * @param {string} next
+ * @returns {object} error
+ */
+
+export const validateVerifyPhoneNumber = [
+  param("phone")
+    .exists()
+    .withMessage("Required Field.")
+    .notEmpty()
+    .withMessage("Provide a valid Phone Number.")
+    .trim(),
+  body("otp")
+    .exists()
+    .withMessage("Required Field.")
+    .notEmpty()
+    .withMessage("Provide a valid email otp.")
+    .isString()
+    .withMessage("otp should be a string")
     .trim(),
 
   (req: Request, res: ValidateUserResponse, next: NextFunction) => {

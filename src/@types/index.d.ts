@@ -10,24 +10,21 @@ declare interface IUser extends Document {
   gender: string;
   phone: string;
   role: string;
-  // verified: boolean;
   last_login?: Date | null;
-  // verificationToken: string;
-  // verificationTokenExpire: Date | null;
-  // resetPasswordToken?: string;
-  // resetPasswordExpire?: Date | null;
+  verified: boolean;
   [key: string]: unknown;
 }
 
 declare interface UserAuth extends Document {
-  userId: string;
   otp: string;
+  otpExpiration: Date | null;
   verificationToken: string;
   resetPasswordToken?: string;
   tokenExpiration: Date | null;
   emailVerified: boolean;
   phoneNumberVerified: boolean;
   status: string;
+  userId: IUser["_id"];
 }
 
 declare interface RegisterUserRequestBody {
@@ -70,6 +67,10 @@ declare interface SuccessResponseDataWithToken<T> {
 declare interface verifyEmailParams {
   token: string;
   email: string;
+}
+
+declare interface verifyPhoneParams {
+  otp: string;
 }
 
 declare interface ErrorResponseData {

@@ -11,7 +11,7 @@ import { UserObject } from "../@types";
 import { Listing } from "../models/listing.model";
 import { Location } from "../models/location.model";
 import { cloudinary } from "../config/multer.config";
-import { CapitalizeFirstLetter } from "../utils/helpers/user.helper";
+import { UserHelper } from "../utils/helpers/user.helper";
 import { ListingHelper } from "../utils/helpers/user.helper";
 
 // import types
@@ -81,11 +81,10 @@ export const createListing = tryCatch(
     const formattedAmenities = amenitiesArray.map((amenity) => amenity.trim());
 
     // capitalize the first letter of the state and city
-    const formattedState = CapitalizeFirstLetter.capitalizeFirstLetter(state);
-    const formattedCity = CapitalizeFirstLetter.capitalizeFirstLetter(city);
-    const formattedCountry =
-      CapitalizeFirstLetter.capitalizeFirstLetter(country);
-    const formattedTitle = CapitalizeFirstLetter.capitalizeFirstLetter(title);
+    const formattedState = UserHelper.capitalizeFirstLetter(state);
+    const formattedCity = UserHelper.capitalizeFirstLetter(city);
+    const formattedCountry = UserHelper.capitalizeFirstLetter(country);
+    const formattedTitle = UserHelper.capitalizeFirstLetter(title);
 
     // check if the description is more than 160 characters
     const descriptionLength =
@@ -128,8 +127,8 @@ export const createListing = tryCatch(
       location: location._id as string,
     });
 
-    CapitalizeFirstLetter.capitalizeFirstLetter(type);
-    CapitalizeFirstLetter.capitalizeFirstLetter(status);
+    UserHelper.capitalizeFirstLetter(type);
+    UserHelper.capitalizeFirstLetter(status);
 
     // upload images to cloudinary
     if (req.files) {
@@ -409,8 +408,10 @@ export const updateListing = tryCatch(
       listing.images = await Promise.all(uploadImages);
     }
 
+    const key = req.body as Record<string, unknown>;
+
     // update listing
-    Object.keys(req.body as Record<string, unknown>).forEach((prop) => {
+    Object.keys(key).forEach((prop) => {
       if (allowedUpdates.includes(prop) && prop !== "images") {
         if (
           prop === "title" ||
@@ -418,13 +419,11 @@ export const updateListing = tryCatch(
           prop === "state" ||
           prop === "country"
         ) {
-          const output = CapitalizeFirstLetter.capitalizeFirstLetter(
-            listing[prop]
-          );
+          const output = UserHelper.capitalizeFirstLetter(listing[prop]);
           listing[prop] = output;
           return;
         }
-        listing[prop] = (req.body as Record<string, unknown>)[prop];
+        listing[prop] = key[prop];
       }
     });
 

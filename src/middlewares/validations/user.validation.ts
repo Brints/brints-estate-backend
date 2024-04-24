@@ -155,7 +155,7 @@ export const validateVerifyPhoneNumber = [
     .exists()
     .withMessage("Required Field.")
     .notEmpty()
-    .withMessage("Provide a valid email otp.")
+    .withMessage("Provide a valid otp.")
     .isString()
     .withMessage("otp should be a string")
     .trim(),

@@ -20,7 +20,7 @@ import {
   verifyEmailTemplate,
   generateNewVerificationTokenTemplate,
 } from "../services/email-templates.service";
-import { CapitalizeFirstLetter } from "../utils/helpers/user.helper";
+import { UserHelper } from "../utils/helpers/user.helper";
 import { cloudinary } from "../config/multer.config";
 import { generateToken } from "../utils/helpers/jwt.helper";
 
@@ -136,8 +136,7 @@ export const registerUser = tryCatch(
     }
 
     // Capitalize first letter of fullname
-    const capitalizedFullname =
-      CapitalizeFirstLetter.capitalizeFirstLetter(fullname);
+    const capitalizedFullname = UserHelper.capitalizeFirstLetter(fullname);
 
     // Hash user password
     const hashedPassword = await BcryptHelper.hashPassword(password);
@@ -304,9 +303,7 @@ export const googleSignUp = tryCatch(
       user.last_login = new Date();
 
       // format fullname
-      user.fullname = CapitalizeFirstLetter.capitalizeFirstLetter(
-        user.fullname
-      );
+      user.fullname = UserHelper.capitalizeFirstLetter(user.fullname);
 
       // save user to database
       await user.save();
@@ -345,7 +342,7 @@ export const googleSignUp = tryCatch(
       const hashedPassword = await BcryptHelper.hashPassword(randomPassword);
 
       // format fullname
-      CapitalizeFirstLetter.capitalizeFirstLetter(fullname);
+      UserHelper.capitalizeFirstLetter(fullname);
 
       // make user an admin if it is the first user
       const users = await User.find();
@@ -445,12 +442,24 @@ export const verifyEmail = tryCatch(
     }
 
     if (userAuth.tokenExpiration && userAuth.tokenExpiration < new Date()) {
+      userAuth.status = "expired";
+    }
+
+    if (userAuth.status === "expired") {
       const err: UserError = {
         message: "Verification token has expired.",
         statusCode: StatusCodes.BAD_REQUEST,
       };
       return errorResponse(res, err.message, err.statusCode);
     }
+
+    // if (userAuth.tokenExpiration && userAuth.tokenExpiration < new Date()) {
+    //   const err: UserError = {
+    //     message: "Verification token has expired.",
+    //     statusCode: StatusCodes.BAD_REQUEST,
+    //   };
+    //   return errorResponse(res, err.message, err.statusCode);
+    // }
 
     userAuth.emailVerified = true;
     userAuth.verificationToken = "";
@@ -498,22 +507,6 @@ export const verifyPhoneNumber = tryCatch(
     const { otp } = req.body;
     const { phone } = req.params as { phone: string };
 
-    if (!phone) {
-      const err: UserError = {
-        message: "Phone number is required",
-        statusCode: StatusCodes.BAD_REQUEST,
-      };
-      return errorResponse(res, err.message, err.statusCode);
-    }
-
-    if (!otp) {
-      const err: UserError = {
-        message: "OTP is required",
-        statusCode: StatusCodes.BAD_REQUEST,
-      };
-      return errorResponse(res, err.message, err.statusCode);
-    }
-
     if (phone.slice(0, 1) !== "+") {
       const err: UserError = {
         message: "Invalid phone number. Phone number must include country code",
@@ -545,12 +538,24 @@ export const verifyPhoneNumber = tryCatch(
     }
 
     if (userAuth.otpExpiration && userAuth.otpExpiration < new Date()) {
+      userAuth.status = "expired";
+    }
+
+    if (userAuth.status === "expired") {
       const err: UserError = {
         message: "OTP has expired",
         statusCode: StatusCodes.BAD_REQUEST,
       };
       return errorResponse(res, err.message, err.statusCode);
     }
+
+    // if (userAuth.otpExpiration && userAuth.otpExpiration < new Date()) {
+    //   const err: UserError = {
+    //     message: "OTP has expired",
+    //     statusCode: StatusCodes.BAD_REQUEST,
+    //   };
+    //   return errorResponse(res, err.message, err.statusCode);
+    // }
 
     userAuth.phoneNumberVerified = true;
     userAuth.otp = "";
@@ -644,26 +649,17 @@ export const loginUser = tryCatch(
     // Save user to database
     await user.save();
 
-    // Return user object with few details
-    const userResponse = {
-      avatar: user.avatar,
-      fullname: user.fullname,
-      email: user.email,
-      gender: user.gender,
-      phone: user.phone,
-      role: user.role,
-      verified: user.verified,
-      last_login: user.last_login,
-      createdAt: user["createdAt"],
-      updatedAt: user["updatedAt"],
-      token,
-    };
+    // Remove password from the user object
+    const userObj = UserHelper.removeItemsFromUserObject(user);
+    if (userObj) {
+      userObj.token = token;
+    }
 
     // Return success response
     return successResponse(
       res,
       "User logged in successfully",
-      userResponse as unknown as IUser,
+      userObj as unknown as IUser,
       StatusCodes.OK
     );
   }
@@ -1157,7 +1153,7 @@ export const updateUserProfile = tryCatch(
       {
         $set: {
           avatar,
-          fullname: CapitalizeFirstLetter.capitalizeFirstLetter(fullname), // capitalize fullname
+          fullname: UserHelper.capitalizeFirstLetter(fullname), // capitalize fullname
           gender,
           phone,
           role,

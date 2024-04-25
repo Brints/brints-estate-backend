@@ -11,6 +11,7 @@ const listingSchema: Schema = new Schema(
     discount: { type: Number, default: 0 },
     location: { type: Schema.Types.ObjectId, ref: "Location" },
     owner: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    coordinates: { type: Schema.Types.ObjectId, ref: "GoogleCoordinates" },
     status: {
       type: String,
       enum: ["rent", "sale", "taken"],

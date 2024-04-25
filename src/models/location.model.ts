@@ -9,7 +9,7 @@ const locationSchema: Schema = new Schema(
     town: { type: String, required: true, trim: true },
     province: { type: String, required: true, trim: true },
     country: { type: String, required: true, trim: true },
-    zipcode: { type: String, trim: true },
+    postalCode: { type: String, trim: true },
   },
   { timestamps: true }
 );

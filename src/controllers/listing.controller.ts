@@ -7,14 +7,16 @@ import { ParamsDictionary } from "express-serve-static-core";
 // import custom libraries
 import tryCatch from "../utils/lib/try-catch.lib";
 import { successResponse, errorResponse } from "../utils/lib/response.lib";
-import { UserObject } from "../@types";
-import { Listing } from "../models/listing.model";
-import { Location } from "../models/location.model";
 import { cloudinary } from "../config/multer.config";
 import { UserHelper } from "../utils/helpers/user.helper";
 import { ListingHelper } from "../utils/helpers/user.helper";
 
+import { Listing } from "../models/listing.model";
+import { Location } from "../models/location.model";
+import { GoogleCoordinates } from "../models/google-map.model";
+
 // import types
+import { UserObject } from "../@types";
 import {
   IListing,
   ListingError,
@@ -50,11 +52,11 @@ export const createListing = tryCatch(
       price,
       discount,
       address,
-      city,
-      state,
+      town,
+      province,
       country,
       name,
-      zipcode,
+      postalCode,
       status,
       type,
       bedroom,
@@ -64,10 +66,10 @@ export const createListing = tryCatch(
     } = req.body;
 
     // fetch the user from request object
-    const userId = (req as unknown as UserObject).user;
+    const userObj = (req as unknown as UserObject).user;
 
     // check if the user is a user
-    if (userId.role === "user") {
+    if (userObj.role === "user") {
       const error: ListingError = {
         message:
           "You cannot create a listing. Upgrade to an agent/landlord account",
@@ -76,13 +78,29 @@ export const createListing = tryCatch(
       return errorResponse(res, error.message, error.statusCode);
     }
 
+    const fullAddress = `${address}, ${town}, ${country}`;
+
+    // get coordinates from address
+    const coordinates = await ListingHelper.getCoordinatesFromAddress(
+      fullAddress
+    );
+
+    const [lat, long] = coordinates.split(",");
+
+    const googleCoordinates = new GoogleCoordinates({
+      lat: Number(lat),
+      long: Number(long),
+    });
+
+    await googleCoordinates.save();
+
     // convert the amenities string to array
     const amenitiesArray = amenities.split(",");
     const formattedAmenities = amenitiesArray.map((amenity) => amenity.trim());
 
     // capitalize the first letter of the state and city
-    const formattedState = UserHelper.capitalizeFirstLetter(state);
-    const formattedCity = UserHelper.capitalizeFirstLetter(city);
+    const formattedProvince = UserHelper.capitalizeFirstLetter(province);
+    const formattedTown = UserHelper.capitalizeFirstLetter(town);
     const formattedCountry = UserHelper.capitalizeFirstLetter(country);
     const formattedTitle = UserHelper.capitalizeFirstLetter(title);
 
@@ -97,16 +115,16 @@ export const createListing = tryCatch(
       return errorResponse(res, error.message, error.statusCode);
     }
 
-    const owner = userId._id as string;
+    const owner = userObj._id as string;
 
     // add location to the database
     const location = new Location({
       name,
       address,
-      city: formattedCity,
-      state: formattedState,
+      town: formattedTown,
+      province: formattedProvince,
       country: formattedCountry,
-      zipcode,
+      postalCode,
     });
 
     await location.save();
@@ -125,6 +143,7 @@ export const createListing = tryCatch(
       images,
       owner,
       location: location._id as string,
+      coordinates: googleCoordinates._id as string,
     });
 
     UserHelper.capitalizeFirstLetter(type);
@@ -132,7 +151,6 @@ export const createListing = tryCatch(
 
     // upload images to cloudinary
     if (req.files) {
-      //   const { images } = req.files as { images: Express.Multer.File[] };
       const images = req.files as Express.Multer.File[];
       const uploadImages = images.map(async (image) => {
         const result = await cloudinary.uploader.upload(image.path);
@@ -181,8 +199,6 @@ type RequestObject = Request<
 export const getAllListings = tryCatch(
   async (req: RequestObject, res: ListingResponse): Promise<unknown> => {
     // destructure request query
-    // const { page, limit } = req.query as Record<string, unknown>;
-    // const { page, limit } = req.query as { page: string; limit: string };
     const { page, limit } = req.query;
 
     // set default values for page and limit
@@ -190,8 +206,8 @@ export const getAllListings = tryCatch(
     const limitNumber = limit ? Number(limit) : 10;
 
     // check if user is logged in
-    const userId = (req as unknown as UserObject).user;
-    if (!userId) {
+    const userObj = (req as unknown as UserObject).user;
+    if (!userObj) {
       const error: ListingError = {
         message: "Please login to view listings",
         statusCode: StatusCodes.UNAUTHORIZED,
@@ -199,17 +215,8 @@ export const getAllListings = tryCatch(
       return errorResponse(res, error.message, error.statusCode);
     }
 
-    // const listings = await Listing.find()
-    //   .sort({ createdAt: -1 })
-    //   .limit(limitNumber)
-    //   .skip(limitNumber * (pageNumber - 1));
-
     const takenListings = await Listing.find({ status: "taken" });
 
-    // delete images of listings that have been taken
-    // const filterTakenListings = listings.filter(
-    //   (listing) => listing.status === "taken"
-    // );
     if (takenListings.length > 0) {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       takenListings.forEach(async (listing) => {
@@ -283,7 +290,8 @@ export const getSingleListing = tryCatch(
     // Fetch Listing
     const listing = await Listing.findOne({ _id: listingId })
       .populate("owner", "fullname email")
-      .populate("location", "name address city state country zipcode");
+      .populate("location", "name address town province country postalCode")
+      .populate("coordinates");
 
     if (!listing) {
       const error: ListingError = {
@@ -330,8 +338,8 @@ export const searchListings = tryCatch(
     if (q) {
       queryObject["$or"] = [
         { title: { $regex: q as string, $options: "i" } },
-        { city: { $regex: q as string, $options: "i" } },
-        { state: { $regex: q as string, $options: "i" } },
+        { town: { $regex: q as string, $options: "i" } },
+        { province: { $regex: q as string, $options: "i" } },
         { country: { $regex: q as string, $options: "i" } },
         { type: { $regex: q as string, $options: "i" } },
       ];
@@ -360,7 +368,7 @@ export const searchListings = tryCatch(
 export const updateListing = tryCatch(
   async (req: RequestObject, res: ListingResponse): Promise<unknown> => {
     const { listingId } = req.params;
-    const userId = (req as unknown as UserObject).user;
+    const userObj = (req as unknown as UserObject).user;
 
     const allowedUpdates = [
       "title",
@@ -372,20 +380,23 @@ export const updateListing = tryCatch(
       "bathroom",
       "amenities",
       "images",
+      "town",
+      "province",
+      "country",
     ];
 
     // fetch the listing
     const listing = await Listing.findOne({ _id: listingId });
     if (!listing) {
       const error: ListingError = {
-        message: "Listing does not exist or does not belong to you.",
+        message: "Listing does not exist.",
         statusCode: StatusCodes.NOT_FOUND,
       };
       return errorResponse(res, error.message, error.statusCode);
     }
 
     // check if user owns the listing
-    if (listing.owner.toString() !== (userId._id as string).toString()) {
+    if (listing.owner.toString() !== (userObj._id as string).toString()) {
       const error: ListingError = {
         message: "You are not authorized to update this listing",
         statusCode: StatusCodes.UNAUTHORIZED,
@@ -415,11 +426,13 @@ export const updateListing = tryCatch(
       if (allowedUpdates.includes(prop) && prop !== "images") {
         if (
           prop === "title" ||
-          prop === "city" ||
-          prop === "state" ||
+          prop === "town" ||
+          prop === "province" ||
           prop === "country"
         ) {
-          const output = UserHelper.capitalizeFirstLetter(listing[prop]);
+          const output = UserHelper.capitalizeFirstLetter(
+            listing[prop] as string
+          );
           listing[prop] = output;
           return;
         }
@@ -458,7 +471,7 @@ export const updateListing = tryCatch(
 export const deleteListing = tryCatch(
   async (req: RequestObject, res: ListingResponse): Promise<unknown> => {
     const { listingId } = req.params;
-    const userId = (req as unknown as UserObject).user;
+    const userObj = (req as unknown as UserObject).user;
 
     // fetch the listing
     const listing = await Listing.findOne({ _id: listingId });
@@ -471,7 +484,7 @@ export const deleteListing = tryCatch(
     }
 
     // check if user owns the listing
-    if (listing.owner.toString() !== (userId._id as string).toString()) {
+    if (listing.owner.toString() !== (userObj._id as string).toString()) {
       const error: ListingError = {
         message: "You are not authorized to delete this listing",
         statusCode: StatusCodes.UNAUTHORIZED,

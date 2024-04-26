@@ -15,4 +15,10 @@ export class PaystackService {
 
     return response.data?.authorization_url as string;
   }
+
+  async verifyPayment(reference: string): Promise<boolean> {
+    const response = await this.paystack.transaction.verify(reference);
+
+    return response.data?.status === "success";
+  }
 }

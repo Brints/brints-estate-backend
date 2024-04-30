@@ -68,6 +68,8 @@
     "nodemailer": "^6.9.8",
     "nodemailer-mailgun-transport": "^2.1.5",
     "paystack": "^2.0.1",
+    "paystack-sdk": "^2.5.13",
+    "redis": "^4.6.13",
     "twilio": "^5.0.4"
   }
 }

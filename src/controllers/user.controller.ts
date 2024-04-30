@@ -14,12 +14,12 @@ import {
   generateVerificationToken,
   generateOTP,
 } from "../utils/lib/verification-token.lib";
-import { emailService } from "../services/email.service";
+import { emailService } from "../services/email/email.service";
 import {
   registerEmailTemplate,
   verifyEmailTemplate,
   generateNewVerificationTokenTemplate,
-} from "../services/email-templates.service";
+} from "../services/email/email-templates.service";
 import { UserHelper } from "../utils/helpers/user.helper";
 import { cloudinary } from "../config/multer.config";
 import { generateToken } from "../utils/helpers/jwt.helper";

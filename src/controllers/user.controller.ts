@@ -19,6 +19,7 @@ import {
   registerEmailTemplate,
   verifyEmailTemplate,
   generateNewVerificationTokenTemplate,
+  sendOTPToEmailTemplate,
 } from "../services/email/email-templates.service";
 import { UserHelper } from "../utils/helpers/user.helper";
 import { cloudinary } from "../config/multer.config";
@@ -230,7 +231,10 @@ export const registerUser = tryCatch(
     // Save user auth to database
     await userAuth.save();
 
-    // Send OTP to user phone number
+    // TODO: Send OTP to user phone number using Twilio
+
+    // TODO: Send OTP to user email
+    await sendOTPToEmailTemplate(newUser, userAuth);
 
     // Send verification email
     await registerEmailTemplate(newUser, userAuth);

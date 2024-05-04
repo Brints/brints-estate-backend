@@ -76,3 +76,32 @@ export const generateNewVerificationTokenTemplate = async (
   // send email
   await emailService.sendEmail(email, subject, html);
 };
+
+/**
+ * @description Send OTP to email to verify phone number
+ *
+ */
+
+export const sendOTPToEmailTemplate = async (
+  user: IUser,
+  userAuth: UserAuth
+) => {
+  const { email, fullname } = user;
+  const { otp, otpExpiration } = userAuth;
+
+  const expiration = otpExpiration
+    ? Math.round(otpExpiration.getTime() - new Date().getTime()) / 60000 +
+      " minutes"
+    : "5 minutes";
+
+  // email subject and html
+  const subject = "Verify Your Phone Number";
+  const html = `<h2>Hello, <span style="color: crimson">${
+    fullname.split(" ")[0]
+  }</span></h2>
+    <p>Here is your OTP code to verify your phone number: <strong>${otp}</strong></p>
+    <p>OTP expires in ${expiration} minutes</p>`;
+
+  // send email
+  await emailService.sendEmail(email, subject, html);
+};

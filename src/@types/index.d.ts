@@ -71,6 +71,7 @@ declare interface verifyEmailParams {
 
 declare interface verifyPhoneParams {
   otp: string;
+  phone: string;
 }
 
 declare interface ErrorResponseData {

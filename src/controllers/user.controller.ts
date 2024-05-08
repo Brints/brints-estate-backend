@@ -508,8 +508,8 @@ type VerifyPhone = Request<unknown, unknown, verifyPhoneParams, unknown>;
 
 export const verifyPhoneNumber = tryCatch(
   async (req: VerifyPhone, res: UserResponse) => {
-    const { otp } = req.body;
-    const { phone } = req.params as { phone: string };
+    const { otp, phone } = req.body;
+    // const { phone } = req.params as { phone: string };
 
     if (phone.slice(0, 1) !== "+") {
       const err: UserError = {

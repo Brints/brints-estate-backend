@@ -14,7 +14,7 @@ declare interface IListing extends Document {
   city: string;
   state: string;
   country: string;
-  zipcode?: string;
+  postalCode?: string;
   status: string;
   type: string;
   bedroom: number;
@@ -22,6 +22,7 @@ declare interface IListing extends Document {
   amenities: string[];
   images: { url: string; filename: string }[];
   owner: string;
+  coordinates: string;
   [key: string]: unknown;
 }
 
@@ -31,8 +32,8 @@ declare interface RegisterListingRequestBody {
   price: number;
   discount?: number;
   address: string;
-  city: string;
-  state: string;
+  town: string;
+  province: string;
   country: string;
   status: string;
   type: string;

@@ -145,7 +145,7 @@ export const validateVerifyEmail = [
  */
 
 export const validateVerifyPhoneNumber = [
-  param("phone")
+  body("phone")
     .exists()
     .withMessage("Required Field.")
     .notEmpty()

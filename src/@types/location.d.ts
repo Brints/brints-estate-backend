@@ -6,10 +6,10 @@ declare type ResponseData<T> = Response<T>;
 declare interface ILocation extends Document {
   name?: string;
   address: string;
-  city: string;
-  state: string;
+  town: string;
+  province: string;
   country: string;
-  zipcode?: string;
+  postalCode?: string;
   [key: string]: unknown;
 }
 

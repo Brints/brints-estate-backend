@@ -4,8 +4,9 @@ import { Response } from "express";
 declare type ResponseData<T> = Response<T>;
 
 declare interface IDiscount extends Document {
-  code: string;
   discount: number;
+  oldPrice: number;
+  newPrice: number;
   expireAt: Date;
 }
 

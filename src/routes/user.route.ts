@@ -38,7 +38,7 @@ userRouter.get(
   userController.verifyEmail
 );
 userRouter.post(
-  "/verify-phone/:phone",
+  "/verify-phone",
   validateVerifyPhoneNumber,
   userController.verifyPhoneNumber
 );

@@ -3,7 +3,6 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ParsedQs } from "qs";
 import { ParamsDictionary } from "express-serve-static-core";
-// import moment from "moment"
 
 // import custom libraries
 import tryCatch from "../utils/lib/try-catch.lib";

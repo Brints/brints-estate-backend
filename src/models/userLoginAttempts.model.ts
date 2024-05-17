@@ -21,7 +21,7 @@ const userLoginAttemptsSchema = new Schema<userLoginAttempts>({
   },
 });
 
-export default model<userLoginAttempts>(
+export const userLoginAttemptsModel = model<userLoginAttempts>(
   "UserLoginAttempts",
   userLoginAttemptsSchema
 );

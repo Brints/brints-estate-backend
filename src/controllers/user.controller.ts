@@ -10,7 +10,8 @@ import tryCatch from "../utils/lib/try-catch.lib";
 import { successResponse, errorResponse } from "../utils/lib/response.lib";
 import { User } from "../models/user.model";
 import { UserAuthModel } from "../models/userAuth.model";
-import userLoginAttempts from "../models/userLoginAttempts.model";
+// import userLoginAttempts from "../models/userLoginAttempts.model";
+import { userLoginAttemptsModel } from "../models/userLoginAttempts.model";
 import BcryptHelper from "../utils/helpers/bcrypt.helper";
 import {
   generateVerificationToken,
@@ -625,10 +626,10 @@ export const loginUser = tryCatch(
     }
 
     // Check if user is blocked
-    const userLogin = await userLoginAttempts.findOne({
+    const userLoginAttempts = await userLoginAttemptsModel.findOne({
       user: user._id as string,
     });
-    if (userLogin?.blocked) {
+    if (userLoginAttempts?.blocked) {
       const err: UserError = {
         message: "User is blocked. Try again later",
         statusCode: StatusCodes.FORBIDDEN,
@@ -636,11 +637,12 @@ export const loginUser = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    // blocked duration should be 3 days
-    const BLOCKED_DURATION = 3 * 24 * 60 * 60 * 1000;
-    if (userLogin?.blockedUntil && userLogin.blockedUntil > new Date()) {
+    if (
+      userLoginAttempts?.blockedUntil &&
+      userLoginAttempts.blockedUntil > new Date()
+    ) {
       const err: UserError = {
-        message: `User is blocked. Try again in ${BLOCKED_DURATION} days`,
+        message: `User is blocked.`,
         statusCode: StatusCodes.FORBIDDEN,
       };
       return errorResponse(res, err.message, err.statusCode);
@@ -648,10 +650,33 @@ export const loginUser = tryCatch(
 
     // Check if password match
     const isMatch = await BcryptHelper.comparePassword(password, user.password);
-    if (!isMatch && userLogin) {
-      userLogin.attempts++;
+
+    if (!isMatch) {
+      if (userLoginAttempts) {
+        userLoginAttempts.attempts += 1;
+        if (userLoginAttempts.attempts >= 3) {
+          userLoginAttempts.blocked = true;
+          userLoginAttempts.blockedUntil = new Date();
+          // block for 3 days
+          userLoginAttempts.blockedUntil.setDate(
+            userLoginAttempts.blockedUntil.getDate() + 3
+          );
+        }
+        await userLoginAttempts.save();
+      } else {
+        const newUserLoginAttempts = new userLoginAttemptsModel({
+          user: user._id as string,
+          attempts: 1,
+        });
+        await newUserLoginAttempts.save();
+      }
+      const attempts = userLoginAttempts?.attempts ?? 0;
       const err: UserError = {
-        message: "Invalid credentials",
+        message: `Invalid credentials. ${
+          attempts >= 3
+            ? "User is blocked."
+            : (3 - attempts).toString() + " attempts left."
+        }`,
         statusCode: StatusCodes.BAD_REQUEST,
       };
       return errorResponse(res, err.message, err.statusCode);
@@ -674,6 +699,12 @@ export const loginUser = tryCatch(
 
     // Set last login date
     user.last_login = new Date();
+
+    // set login attempts to 0
+    if (userLoginAttempts) {
+      userLoginAttempts.attempts = 0;
+      await userLoginAttempts.save();
+    }
 
     // Save user to database
     await user.save();

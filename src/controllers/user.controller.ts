@@ -630,8 +630,13 @@ export const loginUser = tryCatch(
       user: user._id as string,
     });
     if (userLoginAttempts?.blocked) {
+      // show user blocked message and how many days remains before login attempt
+      const blockedUntil = userLoginAttempts.blockedUntil;
+      const currentDate = new Date();
+      const timeDifference = blockedUntil.getTime() - currentDate.getTime();
+      const days = Math.ceil(timeDifference / (1000 * 3600 * 24));
       const err: UserError = {
-        message: "User is blocked. Try again later",
+        message: `User is blocked. Please try again in ${days} days.`,
         statusCode: StatusCodes.FORBIDDEN,
       };
       return errorResponse(res, err.message, err.statusCode);

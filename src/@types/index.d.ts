@@ -27,6 +27,13 @@ declare interface UserAuth extends Document {
   userId: IUser["_id"];
 }
 
+declare interface userLoginAttempts extends Document {
+  user: IUser["_id"];
+  attempts: number;
+  blocked: boolean;
+  blockedUntil: Date;
+}
+
 declare interface RegisterUserRequestBody {
   avatar?: { url: string; filename: string }[];
   fullname: string;

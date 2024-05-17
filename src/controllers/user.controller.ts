@@ -17,7 +17,7 @@ import {
 import { emailService } from "../services/email/email.service";
 import {
   registerEmailTemplate,
-  verifyEmailTemplate,
+  successEmailTemplate,
   generateNewVerificationTokenTemplate,
   sendOTPToEmailTemplate,
 } from "../services/email/email-templates.service";
@@ -484,7 +484,7 @@ export const verifyEmail = tryCatch(
     await user.save();
 
     // TODO: Send welcome email
-    await verifyEmailTemplate(user);
+    await successEmailTemplate(user);
 
     // Return success response
     return successResponse(

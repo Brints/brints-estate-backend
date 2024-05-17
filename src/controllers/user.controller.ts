@@ -3,12 +3,14 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { ParsedQs } from "qs";
 import { ParamsDictionary } from "express-serve-static-core";
+// import moment from "moment"
 
 // import custom libraries
 import tryCatch from "../utils/lib/try-catch.lib";
 import { successResponse, errorResponse } from "../utils/lib/response.lib";
 import { User } from "../models/user.model";
 import { UserAuthModel } from "../models/userAuth.model";
+import userLoginAttempts from "../models/userLoginAttempts.model";
 import BcryptHelper from "../utils/helpers/bcrypt.helper";
 import {
   generateVerificationToken,
@@ -622,9 +624,32 @@ export const loginUser = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
+    // Check if user is blocked
+    const userLogin = await userLoginAttempts.findOne({
+      user: user._id as string,
+    });
+    if (userLogin?.blocked) {
+      const err: UserError = {
+        message: "User is blocked. Try again later",
+        statusCode: StatusCodes.FORBIDDEN,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    // blocked duration should be 3 days
+    const BLOCKED_DURATION = 3 * 24 * 60 * 60 * 1000;
+    if (userLogin?.blockedUntil && userLogin.blockedUntil > new Date()) {
+      const err: UserError = {
+        message: `User is blocked. Try again in ${BLOCKED_DURATION} days`,
+        statusCode: StatusCodes.FORBIDDEN,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
     // Check if password match
     const isMatch = await BcryptHelper.comparePassword(password, user.password);
-    if (!isMatch) {
+    if (!isMatch && userLogin) {
+      userLogin.attempts++;
       const err: UserError = {
         message: "Invalid credentials",
         statusCode: StatusCodes.BAD_REQUEST,

@@ -628,6 +628,17 @@ export const loginUser = tryCatch(
     const userLoginAttempts = await userLoginAttemptsModel.findOne({
       user: user._id as string,
     });
+
+    // Check if user is blocked and unblock user if blockedUntil date is less than current date
+    if (
+      userLoginAttempts?.blocked &&
+      userLoginAttempts.blockedUntil < new Date()
+    ) {
+      userLoginAttempts.blocked = false;
+      userLoginAttempts.attempts = 0;
+      await userLoginAttempts.save();
+    }
+
     if (userLoginAttempts?.blocked) {
       // show user blocked message and how many days remains before login attempt
       const blockedUntil = userLoginAttempts.blockedUntil;
@@ -674,12 +685,15 @@ export const loginUser = tryCatch(
         });
         await newUserLoginAttempts.save();
       }
-      const attempts = userLoginAttempts?.attempts ?? 0;
+
+      const attempts = userLoginAttempts?.attempts ?? 1;
       const err: UserError = {
         message: `Invalid credentials. ${
           attempts >= 3
             ? "User is blocked."
-            : (3 - attempts).toString() + " attempts left."
+            : 3 - attempts === 1
+            ? ` You have ${3 - attempts} attempt left.`
+            : ` You have ${3 - attempts} attempts left.`
         }`,
         statusCode: StatusCodes.BAD_REQUEST,
       };

@@ -8,7 +8,7 @@ export const registerEmailTemplate = async (
 ) => {
   const { email, fullname } = user;
   const { verificationToken, tokenExpiration } = userAuth;
-  const verificationUrl = `${process.env["FRONTEND_URL"]}/verify-email?token=${verificationToken}/email=${email}`;
+  const verificationUrl = `${process.env["FRONTEND_URL"]}/verify-email?token=${verificationToken}&email=${email}`;
 
   const expiration =
     Math.round((tokenExpiration as Date).getTime() - new Date().getTime()) /
@@ -25,7 +25,7 @@ export const registerEmailTemplate = async (
 };
 
 // Verify email template
-export const verifyEmailTemplate = async (user: IUser) => {
+export const successEmailTemplate = async (user: IUser) => {
   const { email, fullname } = user;
   const subject = "Welcome to Brints Estate";
   const html = `<h2>Dear, <span style="color: crimson">${

@@ -1,4 +1,4 @@
-import * as multer from "multer";
+import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinaryConfig from "./cloudinary.config";

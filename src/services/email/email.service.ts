@@ -1,5 +1,5 @@
 import * as nodemailer from "nodemailer";
-import * as nodemailerMailgun from "nodemailer-mailgun-transport";
+import nodemailerMailgun from "nodemailer-mailgun-transport";
 import * as dotenv from "dotenv";
 import { MailgunConfig } from "../../@types";
 dotenv.config();
@@ -40,30 +40,3 @@ const mailgunConfig: MailgunConfig = {
 };
 
 export const emailService = new EmailService(mailgunConfig);
-
-// @Injectable()
-// export class EmailService {
-//   private readonly transporter: nodemailer.Transporter;
-
-//   constructor() {
-//     this.transporter = nodemailer.createTransport(
-//       nodemailerMailgun({
-//         auth: {
-//           api_key: process.env.MAILGUN_API_KEY,
-//           domain: process.env.MAILGUN_DOMAIN,
-//         },
-//       })
-//     );
-//   }
-
-//   sendEmail(to: string, subject: string, html: string) {
-//     const mailOptions = {
-//       from: "Brints Estate <no-reply@brints.live>",
-//       to,
-//       subject,
-//       html,
-//     };
-
-//     return this.transporter.sendMail(mailOptions);
-//   }
-// }

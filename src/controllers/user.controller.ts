@@ -26,6 +26,7 @@ import {
 import { UserHelper } from "../utils/helpers/user.helper";
 import { cloudinary } from "../config/multer.config";
 import { generateToken } from "../utils/helpers/jwt.helper";
+import { sendSMS, verificationMessage } from "../config/twilio.config";
 
 // import interfaces
 import { IUser, UserResponse, UserAuth } from "../@types";
@@ -230,10 +231,17 @@ export const registerUser = tryCatch(
       userId: newUser._id as string,
     });
 
+    // otp expires in 15 minutes
+    const duration = Math.round(
+      (otpExpire.getTime() - new Date().getTime()) / 60000
+    );
+    const message = verificationMessage(otp, duration.toString());
+
     // Save user auth to database
     await userAuth.save();
 
     // TODO: Send OTP to user phone number using Twilio
+    await sendSMS(fullPhone, message);
 
     // TODO: Send OTP to user email
     await sendOTPToEmailTemplate(newUser, userAuth);
@@ -632,21 +640,25 @@ export const loginUser = tryCatch(
     // Check if user is blocked and unblock user if blockedUntil date is less than current date
     if (
       userLoginAttempts?.blocked &&
-      userLoginAttempts.blockedUntil < new Date()
+      (userLoginAttempts.blockedUntil as Date) < new Date()
     ) {
       userLoginAttempts.blocked = false;
       userLoginAttempts.attempts = 0;
+      userLoginAttempts.blockedUntil = null;
       await userLoginAttempts.save();
     }
 
     if (userLoginAttempts?.blocked) {
       // show user blocked message and how many days remains before login attempt
-      const blockedUntil = userLoginAttempts.blockedUntil;
+      const blockedUntil = userLoginAttempts.blockedUntil as Date;
       const currentDate = new Date();
       const timeDifference = blockedUntil.getTime() - currentDate.getTime();
       const days = Math.ceil(timeDifference / (1000 * 3600 * 24));
       const err: UserError = {
-        message: `User is blocked. Please try again in ${days} days.`,
+        message:
+          days === 1
+            ? `User is blocked. Contact admin or try again ${days} day.`
+            : `User is blocked. Contact admin or try again ${days} days.`,
         statusCode: StatusCodes.FORBIDDEN,
       };
       return errorResponse(res, err.message, err.statusCode);
@@ -721,6 +733,7 @@ export const loginUser = tryCatch(
     // set login attempts to 0
     if (userLoginAttempts) {
       userLoginAttempts.attempts = 0;
+      userLoginAttempts.blockedUntil = null;
       await userLoginAttempts.save();
     }
 

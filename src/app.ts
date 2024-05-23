@@ -1,9 +1,9 @@
 // import necessary modules
-import * as express from "express";
-import * as morgan from "morgan";
-import * as cors from "cors";
+import express from "express";
+import morgan from "morgan";
+import cors from "cors";
 import helmet from "helmet";
-import * as multer from "multer";
+import multer from "multer";
 
 import { StatusCodes } from "http-status-codes";
 

@@ -1,6 +1,6 @@
 # Brints Estate - Backend Service
 
-<div>
+<div align="center">
   <div>
     <img src="https://img.shields.io/badge/brints%20estate-backend-blue" alt="brints estate backend">
     <img src="https://img.shields.io/badge/version-1.0.0-blue" alt="version 1.0.0">
@@ -8,7 +8,7 @@
   </div>
 </div>
 
-<div>
+<div align="center">
   <div>
     <img src="https://img.shields.io/badge/made%20by-Aniebiet%20Afia-brightgreen" alt="made by Aniebiet Afia">
     <img src="https://img.shields.io/badge/Node.js-20.10.0-green" alt="Node.js version">

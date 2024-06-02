@@ -1,18 +1,22 @@
 # Brints Estate - Backend Service
 
 <div align="center">
+<div>
   <img src="https://img.shields.io/badge/brints%20estate-backend-blue" alt="brints estate backend">
   <img src="https://img.shields.io/badge/version-1.0.0-blue" alt="version 1.0.0">
   <img src="https://img.shields.io/badge/status-in%20progress-blue" alt="status in progress">
+  </div>
 </div>
 
 <div align="center">
+<div>
   <img src="https://img.shields.io/badge/made%20by-Aniebiet%20Afia-brightgreen" alt="made by Aniebiet Afia">
   <img src="https://img.shields.io/badge/Node.js-20.10.0-green" alt="Node.js version">
   <img src="https://img.shields.io/badge/Express-4.18.2-green" alt="Express version">
   <!-- <img src="https://img.shields.io/badge/MongoDB-4.4.6-green" alt="MongoDB version"> -->
   <img src="https://img.shields.io/badge/Mongoose-8.0.3-green" alt="Mongooose version">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="license MIT">
+  </div>
 </div>
 
 Brints Estate is a real estate website that allows users to search for properties, view property details, and contact the real estate owner/realtors. This is the backend service of the website that provides the API for the frontend to consume. The aim of this project is to learn how to build a full-stack web application using the MERN stack. Brints Estate Backend Service will bridge the gap for users to search for properties and process acquisition of the property in record time. Admin, Realtors and landlords can upload, update and delete property.

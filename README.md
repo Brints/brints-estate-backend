@@ -8,9 +8,10 @@
 
 <div align="center">
   <img src="https://img.shields.io/badge/made%20by-Aniebiet%20Afia-brightgreen" alt="made by Aniebiet Afia">
-  <img src="https://img.shields.io/badge/Node.js-14.17.0-green" alt="Node.js version">
-  <img src="https://img.shields.io/badge/Express-4.17.1-green" alt="Express version">
-  <img src="https://img.shields.io/badge/MongoDB-4.4.6-green" alt="MongoDB version">
+  <img src="https://img.shields.io/badge/Node.js-20.10.0-green" alt="Node.js version">
+  <img src="https://img.shields.io/badge/Express-4.18.2-green" alt="Express version">
+  <!-- <img src="https://img.shields.io/badge/MongoDB-4.4.6-green" alt="MongoDB version"> -->
+  <img src="https://img.shields.io/badge/MongoDB-8.0.3-green" alt="Mongooose version">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="license MIT">
 </div>
 

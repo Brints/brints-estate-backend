@@ -882,9 +882,6 @@ export const generateNewVerificationToken = tryCatch(
     );
 
     // Set verification token and verification token expire date
-    // user.verificationToken = verificationToken;
-    // user.verificationTokenExpire = verificationTokenExpire;
-
     userAuth.resetPasswordToken = resetPasswordToken;
     userAuth.tokenExpiration = verificationTokenExpire;
 

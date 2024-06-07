@@ -858,6 +858,16 @@ export const generateNewVerificationToken = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
+    // check for active verification token
+    if (userAuth.tokenExpiration && userAuth.tokenExpiration > new Date()) {
+      const err: UserError = {
+        message:
+          "You have an active verification token. Please, check your email.",
+        statusCode: StatusCodes.FORBIDDEN,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
     // Generate verification token
     const resetPasswordToken = generateVerificationToken();
 

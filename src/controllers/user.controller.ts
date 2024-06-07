@@ -872,7 +872,7 @@ export const generateNewVerificationToken = tryCatch(
     }
 
     // Generate verification token
-    const resetPasswordToken = generateVerificationToken();
+    const resetVerificationToken = generateVerificationToken();
 
     // Set verification token expire date to 3 hours
     // const verificationTokenExpire = new Date();
@@ -885,8 +885,9 @@ export const generateNewVerificationToken = tryCatch(
     );
 
     // Set verification token and verification token expire date
-    userAuth.resetPasswordToken = resetPasswordToken;
+    userAuth.verificationToken = resetVerificationToken;
     userAuth.tokenExpiration = verificationTokenExpire;
+    userAuth.status = "pending";
 
     await userAuth.save();
 

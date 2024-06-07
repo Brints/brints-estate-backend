@@ -459,6 +459,8 @@ export const verifyEmail = tryCatch(
       userAuth.status = "expired";
     }
 
+    await userAuth.save();
+
     if (userAuth.status === "expired") {
       const err: UserError = {
         message: "Verification token has expired.",
@@ -477,6 +479,7 @@ export const verifyEmail = tryCatch(
 
     userAuth.emailVerified = true;
     userAuth.verificationToken = "";
+    userAuth.resetPasswordToken = "";
     userAuth.tokenExpiration = null;
 
     if (

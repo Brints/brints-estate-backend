@@ -7,11 +7,11 @@ const userLoginAttemptsSchema = new Schema<userLoginAttempts>({
     ref: "User",
     required: true,
   },
-  attempts: {
+  loginAttempts: {
     type: Number,
     default: 0,
   },
-  blocked: {
+  isBlocked: {
     type: Boolean,
     default: false,
   },

@@ -642,78 +642,139 @@ export const loginUser = tryCatch(
 
     // Check if user is blocked and unblock user if blockedUntil date is less than current date
     if (
-      userLoginAttempts?.blocked &&
+      userLoginAttempts?.isBlocked &&
       (userLoginAttempts.blockedUntil as Date) < new Date()
     ) {
-      userLoginAttempts.blocked = false;
-      userLoginAttempts.attempts = 0;
+      userLoginAttempts.isBlocked = false;
+      userLoginAttempts.loginAttempts = 0;
       userLoginAttempts.blockedUntil = null;
       await userLoginAttempts.save();
     }
 
-    if (userLoginAttempts?.blocked) {
-      // show user blocked message and how many days remains before login attempt
-      const blockedUntil = userLoginAttempts.blockedUntil as Date;
-      const currentDate = new Date();
-      const timeDifference = blockedUntil.getTime() - currentDate.getTime();
-      const days = Math.ceil(timeDifference / (1000 * 3600 * 24));
-      const err: UserError = {
-        message:
-          days === 1
-            ? `User is blocked. Contact admin or try again ${days} day.`
-            : `User is blocked. Contact admin or try again ${days} days.`,
-        statusCode: StatusCodes.FORBIDDEN,
-      };
-      return errorResponse(res, err.message, err.statusCode);
-    }
+    // if (userLoginAttempts?.blocked) {
+    //   // show user blocked message and how many days remains before login attempt
+    //   const blockedUntil = userLoginAttempts.blockedUntil as Date;
+    //   const currentDate = new Date();
+    //   const timeDifference = blockedUntil.getTime() - currentDate.getTime();
+    //   const days = Math.ceil(timeDifference / (1000 * 3600 * 24));
+    //   const err: UserError = {
+    //     message:
+    //       days === 1
+    //         ? `User is blocked. Contact admin or try again ${days} day.`
+    //         : `User is blocked. Contact admin or try again ${days} days.`,
+    //     statusCode: StatusCodes.FORBIDDEN,
+    //   };
+    //   return errorResponse(res, err.message, err.statusCode);
+    // }
 
-    if (
-      userLoginAttempts?.blockedUntil &&
-      userLoginAttempts.blockedUntil > new Date()
-    ) {
-      const err: UserError = {
-        message: `User is blocked.`,
-        statusCode: StatusCodes.FORBIDDEN,
-      };
-      return errorResponse(res, err.message, err.statusCode);
-    }
+    // if (
+    //   userLoginAttempts?.blockedUntil &&
+    //   userLoginAttempts.blockedUntil > new Date()
+    // ) {
+    //   const err: UserError = {
+    //     message: `User is blocked.`,
+    //     statusCode: StatusCodes.FORBIDDEN,
+    //   };
+    //   return errorResponse(res, err.message, err.statusCode);
+    // }
 
     // Check if password match
     const isMatch = await BcryptHelper.comparePassword(password, user.password);
 
-    if (!isMatch) {
+    const MAX_LOGIN_ATTEMPTS = 3;
+    const BLOCK_TIME = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
+
+    if (
+      userLoginAttempts &&
+      userLoginAttempts.isBlocked &&
+      userLoginAttempts.blockedUntil &&
+      userLoginAttempts.blockedUntil > new Date()
+    ) {
+      // show user blocked message and how many days remains before login attempt
+      const blockedUntil = userLoginAttempts.blockedUntil;
+      const currentDate = new Date();
+      const timeDifference = blockedUntil.getTime() - currentDate.getTime();
+
+      // convert time difference to days
+      const daysRemaining = Math.ceil(timeDifference / (1000 * 3600 * 24));
+
+      // return error response
+      const err: UserError = {
+        message:
+          daysRemaining > 1
+            ? `Your access is blocked. Contact admin or try again in ${daysRemaining} days.`
+            : `Your access is blocked. Contact admin or try again in ${daysRemaining} day.`,
+        statusCode: StatusCodes.FORBIDDEN,
+      };
+      return errorResponse(res, err.message, err.statusCode);
+    }
+
+    if (!isMatch && !userLoginAttempts?.isBlocked) {
       if (userLoginAttempts) {
-        userLoginAttempts.attempts += 1;
-        if (userLoginAttempts.attempts >= 3) {
-          userLoginAttempts.blocked = true;
+        userLoginAttempts.loginAttempts += 1;
+        if (userLoginAttempts.loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+          userLoginAttempts.isBlocked = true;
           userLoginAttempts.blockedUntil = new Date();
-          // block for 3 days
-          userLoginAttempts.blockedUntil.setDate(
-            userLoginAttempts.blockedUntil.getDate() + 3
+          userLoginAttempts.blockedUntil.setTime(
+            userLoginAttempts.blockedUntil.getTime() + BLOCK_TIME
           );
         }
         await userLoginAttempts.save();
       } else {
         const newUserLoginAttempts = new userLoginAttemptsModel({
           user: user._id as string,
-          attempts: 1,
+          loginAttempts: 1,
         });
         await newUserLoginAttempts.save();
       }
 
-      const attempts = userLoginAttempts?.attempts ?? 1;
+      const attempts = userLoginAttempts?.loginAttempts ?? 1;
       const err: UserError = {
         message: `Invalid credentials. ${
-          attempts >= 3
+          attempts >= MAX_LOGIN_ATTEMPTS
             ? "User is blocked."
-            : 3 - attempts === 1
-            ? ` You have ${3 - attempts} attempt left.`
-            : ` You have ${3 - attempts} attempts left.`
+            : MAX_LOGIN_ATTEMPTS - attempts === 1
+            ? ` You have ${MAX_LOGIN_ATTEMPTS - attempts} attempt left.`
+            : ` You have ${MAX_LOGIN_ATTEMPTS - attempts} attempts left.`
         }`,
         statusCode: StatusCodes.BAD_REQUEST,
       };
       return errorResponse(res, err.message, err.statusCode);
     }
+
+    // if (!isMatch) {
+    //   if (userLoginAttempts) {
+    //     userLoginAttempts.attempts += 1;
+    //     if (userLoginAttempts.attempts >= 3) {
+    //       userLoginAttempts.blocked = true;
+    //       userLoginAttempts.blockedUntil = new Date();
+    //       // block for 3 days
+    //       userLoginAttempts.blockedUntil.setDate(
+    //         userLoginAttempts.blockedUntil.getDate() + 3
+    //       );
+    //     }
+    //     await userLoginAttempts.save();
+    //   } else {
+    //     const newUserLoginAttempts = new userLoginAttemptsModel({
+    //       user: user._id as string,
+    //       attempts: 1,
+    //     });
+    //     await newUserLoginAttempts.save();
+    //   }
+
+    //   const attempts = userLoginAttempts?.attempts ?? 1;
+    //   const err: UserError = {
+    //     message: `Invalid credentials. ${
+    //       attempts >= 3
+    //         ? "User is blocked."
+    //         : 3 - attempts === 1
+    //         ? ` You have ${3 - attempts} attempt left.`
+    //         : ` You have ${3 - attempts} attempts left.`
+    //     }`,
+    //     statusCode: StatusCodes.BAD_REQUEST,
+    //   };
+    //   return errorResponse(res, err.message, err.statusCode);
+    // }
 
     if (!user.verified) {
       const err: UserError = {
@@ -733,9 +794,9 @@ export const loginUser = tryCatch(
     // Set last login date
     user.last_login = new Date();
 
-    // set login attempts to 0
+    // set login attempts to 0 after successful login
     if (userLoginAttempts) {
-      userLoginAttempts.attempts = 0;
+      userLoginAttempts.loginAttempts = 0;
       userLoginAttempts.blockedUntil = null;
       await userLoginAttempts.save();
     }

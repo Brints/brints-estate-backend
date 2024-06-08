@@ -29,8 +29,8 @@ declare interface UserAuth extends Document {
 
 declare interface userLoginAttempts extends Document {
   user: IUser["_id"];
-  attempts: number;
-  blocked: boolean;
+  loginAttempts: number;
+  isBlocked: boolean;
   blockedUntil: Date | null;
 }
 

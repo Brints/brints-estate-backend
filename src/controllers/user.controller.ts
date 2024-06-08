@@ -651,36 +651,6 @@ export const loginUser = tryCatch(
       await userLoginAttempts.save();
     }
 
-    // if (userLoginAttempts?.blocked) {
-    //   // show user blocked message and how many days remains before login attempt
-    //   const blockedUntil = userLoginAttempts.blockedUntil as Date;
-    //   const currentDate = new Date();
-    //   const timeDifference = blockedUntil.getTime() - currentDate.getTime();
-    //   const days = Math.ceil(timeDifference / (1000 * 3600 * 24));
-    //   const err: UserError = {
-    //     message:
-    //       days === 1
-    //         ? `User is blocked. Contact admin or try again ${days} day.`
-    //         : `User is blocked. Contact admin or try again ${days} days.`,
-    //     statusCode: StatusCodes.FORBIDDEN,
-    //   };
-    //   return errorResponse(res, err.message, err.statusCode);
-    // }
-
-    // if (
-    //   userLoginAttempts?.blockedUntil &&
-    //   userLoginAttempts.blockedUntil > new Date()
-    // ) {
-    //   const err: UserError = {
-    //     message: `User is blocked.`,
-    //     statusCode: StatusCodes.FORBIDDEN,
-    //   };
-    //   return errorResponse(res, err.message, err.statusCode);
-    // }
-
-    // Check if password match
-    const isMatch = await BcryptHelper.comparePassword(password, user.password);
-
     const MAX_LOGIN_ATTEMPTS = 3;
     const BLOCK_TIME = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
 
@@ -708,6 +678,9 @@ export const loginUser = tryCatch(
       };
       return errorResponse(res, err.message, err.statusCode);
     }
+
+    // Check if password match
+    const isMatch = await BcryptHelper.comparePassword(password, user.password);
 
     if (!isMatch) {
       if (userLoginAttempts && !userLoginAttempts.isBlocked) {

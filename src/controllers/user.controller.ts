@@ -636,7 +636,7 @@ export const loginUser = tryCatch(
     }
 
     // Check if user is blocked
-    const userLoginAttempts = await userLoginAttemptsModel.findOne({
+    let userLoginAttempts = await userLoginAttemptsModel.findOne({
       user: user._id as string,
     });
 
@@ -702,33 +702,34 @@ export const loginUser = tryCatch(
       const err: UserError = {
         message:
           daysRemaining > 1
-            ? `Your access is blocked. Contact admin or try again in ${daysRemaining} days.`
-            : `Your access is blocked. Contact admin or try again in ${daysRemaining} day.`,
+            ? `Your login access is blocked. Contact admin or try again in ${daysRemaining} days.`
+            : `Your login access is blocked. Contact admin or try again in ${daysRemaining} day.`,
         statusCode: StatusCodes.FORBIDDEN,
       };
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    if (!isMatch && !userLoginAttempts?.isBlocked) {
-      if (userLoginAttempts) {
+    if (!isMatch) {
+      if (userLoginAttempts && !userLoginAttempts.isBlocked) {
         userLoginAttempts.loginAttempts += 1;
+        await userLoginAttempts.save();
         if (userLoginAttempts.loginAttempts >= MAX_LOGIN_ATTEMPTS) {
           userLoginAttempts.isBlocked = true;
           userLoginAttempts.blockedUntil = new Date();
           userLoginAttempts.blockedUntil.setTime(
             userLoginAttempts.blockedUntil.getTime() + BLOCK_TIME
           );
+          await userLoginAttempts.save();
         }
-        await userLoginAttempts.save();
       } else {
-        const newUserLoginAttempts = new userLoginAttemptsModel({
+        // create the user login attempts if it does not exist
+        userLoginAttempts = new userLoginAttemptsModel({
           user: user._id as string,
           loginAttempts: 1,
         });
-        await newUserLoginAttempts.save();
+        await userLoginAttempts.save();
       }
-
-      const attempts = userLoginAttempts?.loginAttempts ?? 1;
+      const attempts = userLoginAttempts.loginAttempts;
       const err: UserError = {
         message: `Invalid credentials. ${
           attempts >= MAX_LOGIN_ATTEMPTS
@@ -741,40 +742,6 @@ export const loginUser = tryCatch(
       };
       return errorResponse(res, err.message, err.statusCode);
     }
-
-    // if (!isMatch) {
-    //   if (userLoginAttempts) {
-    //     userLoginAttempts.attempts += 1;
-    //     if (userLoginAttempts.attempts >= 3) {
-    //       userLoginAttempts.blocked = true;
-    //       userLoginAttempts.blockedUntil = new Date();
-    //       // block for 3 days
-    //       userLoginAttempts.blockedUntil.setDate(
-    //         userLoginAttempts.blockedUntil.getDate() + 3
-    //       );
-    //     }
-    //     await userLoginAttempts.save();
-    //   } else {
-    //     const newUserLoginAttempts = new userLoginAttemptsModel({
-    //       user: user._id as string,
-    //       attempts: 1,
-    //     });
-    //     await newUserLoginAttempts.save();
-    //   }
-
-    //   const attempts = userLoginAttempts?.attempts ?? 1;
-    //   const err: UserError = {
-    //     message: `Invalid credentials. ${
-    //       attempts >= 3
-    //         ? "User is blocked."
-    //         : 3 - attempts === 1
-    //         ? ` You have ${3 - attempts} attempt left.`
-    //         : ` You have ${3 - attempts} attempts left.`
-    //     }`,
-    //     statusCode: StatusCodes.BAD_REQUEST,
-    //   };
-    //   return errorResponse(res, err.message, err.statusCode);
-    // }
 
     if (!user.verified) {
       const err: UserError = {

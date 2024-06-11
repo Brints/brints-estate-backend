@@ -26,7 +26,7 @@ import {
 import { UserHelper } from "../utils/helpers/user.helper";
 import { cloudinary } from "../config/multer.config";
 import { generateToken } from "../utils/helpers/jwt.helper";
-import { sendSMS, verificationMessage } from "../config/twilio.config";
+// import { sendSMS, verificationMessage } from "../config/twilio.config";
 
 // import interfaces
 import { IUser, UserResponse, UserAuth } from "../@types";
@@ -156,14 +156,14 @@ export const registerUser = tryCatch(
     const otp = generateOTP(6);
 
     // Set verification token expire date to 3 hours
-    // const verificationTokenExpire = new Date();
-    // verificationTokenExpire.setHours(verificationTokenExpire.getHours() + 3);
+    const verificationTokenExpire = new Date();
+    verificationTokenExpire.setHours(verificationTokenExpire.getHours() + 3);
 
     // Set verification token expire date to 15 minutes
-    const verificationTokenExpire = new Date();
-    verificationTokenExpire.setMinutes(
-      verificationTokenExpire.getMinutes() + 15
-    );
+    // const verificationTokenExpire = new Date();
+    // verificationTokenExpire.setMinutes(
+    //   verificationTokenExpire.getMinutes() + 15
+    // );
 
     // Set otp expire date to 15 minutes
     const otpExpire = new Date();
@@ -232,16 +232,16 @@ export const registerUser = tryCatch(
     });
 
     // otp expires in 15 minutes
-    const duration = Math.round(
-      (otpExpire.getTime() - new Date().getTime()) / 60000
-    );
-    const message = verificationMessage(otp, duration.toString());
+    // const duration = Math.ceil(
+    //   (otpExpire.getTime() - new Date().getTime()) / 60000
+    // );
+    // const message = verificationMessage(otp, duration.toString());
 
     // Save user auth to database
     await userAuth.save();
 
     // TODO: Send OTP to user phone number using Twilio
-    await sendSMS(fullPhone, message);
+    // await sendSMS(fullPhone, message);
 
     // TODO: Send OTP to user email
     await sendOTPToEmailTemplate(newUser, userAuth);
@@ -508,6 +508,57 @@ export const verifyEmail = tryCatch(
     );
   }
 );
+
+/**
+ * @description Resend otp
+ * @route POST /user/resend-otp
+ * @param {Request} req
+ * @param {Response} res
+ * @returns {JSON} message
+ * @access Public
+ */
+
+type ResendOTP = Request<unknown, unknown, { email: string }, unknown>;
+
+export const resendOTP = tryCatch(async (req: ResendOTP, res: UserResponse) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    const err: UserError = {
+      message: "Sorry, this user does not exist.",
+      statusCode: StatusCodes.NOT_FOUND,
+    };
+    return errorResponse(res, err.message, err.statusCode);
+  }
+
+  const userAuth = await UserAuthModel.findOne({ userId: user._id as string });
+  if (!userAuth) {
+    const err: UserError = {
+      message: "Try again.",
+      statusCode: StatusCodes.NOT_FOUND,
+    };
+    return errorResponse(res, err.message, err.statusCode);
+  }
+
+  const otp = generateOTP(6);
+
+  const otpExpire = new Date();
+  otpExpire.setMinutes(otpExpire.getMinutes() + 15);
+
+  userAuth.otp = otp;
+  userAuth.otpExpiration = otpExpire;
+  await userAuth.save();
+
+  await sendOTPToEmailTemplate(user, userAuth);
+
+  return successResponse(
+    res,
+    "New OTP has been sent to your registered email.",
+    {} as IUser,
+    StatusCodes.OK
+  );
+});
 
 /**
  * @description Verify user phone number

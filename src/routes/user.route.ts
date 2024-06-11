@@ -32,6 +32,7 @@ userRouter.post(
   userController.registerUser
 );
 userRouter.post("/google-signup", userController.googleSignUp);
+userRouter.post("/resend-otp", userController.resendOTP);
 userRouter.get(
   "/verify-email",
   validateVerifyEmail,

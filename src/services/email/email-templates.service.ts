@@ -1,5 +1,6 @@
 import { emailService } from "./email.service";
 import { IUser, UserAuth } from "../../@types";
+import { dateConversion } from "../../utils/helpers/dateConversion";
 
 // Register user email template
 export const registerEmailTemplate = async (
@@ -10,15 +11,8 @@ export const registerEmailTemplate = async (
   const { verificationToken, tokenExpiration } = userAuth;
   const verificationUrl = `${process.env["FRONTEND_URL"]}/verify-email?token=${verificationToken}&email=${email}`;
 
-  // const expiration =
-  //   Math.round((tokenExpiration as Date).getTime() - new Date().getTime()) /
-  //     60000 +
-  //   " minutes";
-
   // convert token expiration to hours
-  const expiration = Math.ceil(
-    (tokenExpiration as Date).getTime() - new Date().getTime()
-  );
+  const expiration = dateConversion(tokenExpiration as Date, "hours");
 
   const subject = "Verify your email";
   const html = `<h2>Hello, <span style="color: crimson">${
@@ -65,10 +59,7 @@ export const generateNewVerificationTokenTemplate = async (
   // set verification url
   const verificationUrl = `${process.env["BASE_URL"]}/user/verify-email/${verificationToken}/${email}`;
 
-  const expiration =
-    Math.round((tokenExpiration as Date).getTime() - new Date().getTime()) /
-      60000 +
-    " minutes";
+  const expiration = dateConversion(tokenExpiration as Date, "hours");
 
   // email subject and html
   const subject = "New Verification Token";
@@ -94,10 +85,7 @@ export const sendOTPToEmailTemplate = async (
   const { email, fullname } = user;
   const { otp, otpExpiration } = userAuth;
 
-  const expiration = otpExpiration
-    ? Math.round(otpExpiration.getTime() - new Date().getTime()) / 60000 +
-      " minutes"
-    : "5 minutes";
+  const expiration = dateConversion(otpExpiration as Date, "minutes");
 
   // email subject and html
   const subject = "Verify Your Phone Number";
@@ -105,7 +93,7 @@ export const sendOTPToEmailTemplate = async (
     fullname.split(" ")[0]
   }</span></h2>
     <p>Here is your OTP code to verify your phone number: <strong>${otp}</strong></p>
-    <p>OTP expires in ${expiration} minutes</p>`;
+    <p>OTP expires in ${expiration}</p>`;
 
   // send email
   await emailService.sendEmail(email, subject, html);

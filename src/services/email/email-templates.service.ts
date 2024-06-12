@@ -16,7 +16,7 @@ export const registerEmailTemplate = async (
   //   " minutes";
 
   // convert token expiration to hours
-  const expiration = Math.round(
+  const expiration = Math.ceil(
     (tokenExpiration as Date).getTime() - new Date().getTime()
   );
 

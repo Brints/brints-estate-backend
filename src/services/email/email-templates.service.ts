@@ -10,10 +10,15 @@ export const registerEmailTemplate = async (
   const { verificationToken, tokenExpiration } = userAuth;
   const verificationUrl = `${process.env["FRONTEND_URL"]}/verify-email?token=${verificationToken}&email=${email}`;
 
-  const expiration =
-    Math.round((tokenExpiration as Date).getTime() - new Date().getTime()) /
-      60000 +
-    " minutes";
+  // const expiration =
+  //   Math.round((tokenExpiration as Date).getTime() - new Date().getTime()) /
+  //     60000 +
+  //   " minutes";
+
+  // convert token expiration to hours
+  const expiration = Math.round(
+    (tokenExpiration as Date).getTime() - new Date().getTime()
+  );
 
   const subject = "Verify your email";
   const html = `<h2>Hello, <span style="color: crimson">${

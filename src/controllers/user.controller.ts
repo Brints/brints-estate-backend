@@ -16,12 +16,13 @@ import {
   generateVerificationToken,
   generateOTP,
 } from "../utils/lib/verification-token.lib";
-import { emailService } from "../services/email/email.service";
+
 import {
   registerEmailTemplate,
   successEmailTemplate,
   generateNewVerificationTokenTemplate,
   sendOTPToEmailTemplate,
+  forgotPasswordEmailTemplate,
 } from "../services/email/email-templates.service";
 import { UserHelper } from "../utils/helpers/user.helper";
 import { cloudinary } from "../config/multer.config";
@@ -158,12 +159,6 @@ export const registerUser = tryCatch(
     // Set verification token expire date to 3 hours
     const verificationTokenExpire = new Date();
     verificationTokenExpire.setHours(verificationTokenExpire.getHours() + 3);
-
-    // Set verification token expire date to 15 minutes
-    // const verificationTokenExpire = new Date();
-    // verificationTokenExpire.setMinutes(
-    //   verificationTokenExpire.getMinutes() + 15
-    // );
 
     // Set otp expire date to 15 minutes
     const otpExpire = new Date();
@@ -469,14 +464,6 @@ export const verifyEmail = tryCatch(
       return errorResponse(res, err.message, err.statusCode);
     }
 
-    // if (userAuth.tokenExpiration && userAuth.tokenExpiration < new Date()) {
-    //   const err: UserError = {
-    //     message: "Verification token has expired.",
-    //     statusCode: StatusCodes.BAD_REQUEST,
-    //   };
-    //   return errorResponse(res, err.message, err.statusCode);
-    // }
-
     userAuth.emailVerified = true;
     userAuth.verificationToken = "";
     userAuth.resetPasswordToken = "";
@@ -548,6 +535,7 @@ export const resendOTP = tryCatch(async (req: ResendOTP, res: UserResponse) => {
 
   userAuth.otp = otp;
   userAuth.otpExpiration = otpExpire;
+  userAuth.status = "pending";
   await userAuth.save();
 
   await sendOTPToEmailTemplate(user, userAuth);
@@ -607,6 +595,7 @@ export const verifyPhoneNumber = tryCatch(
 
     if (userAuth.otpExpiration && userAuth.otpExpiration < new Date()) {
       userAuth.status = "expired";
+      await userAuth.save();
     }
 
     if (userAuth.status === "expired") {
@@ -616,14 +605,6 @@ export const verifyPhoneNumber = tryCatch(
       };
       return errorResponse(res, err.message, err.statusCode);
     }
-
-    // if (userAuth.otpExpiration && userAuth.otpExpiration < new Date()) {
-    //   const err: UserError = {
-    //     message: "OTP has expired",
-    //     statusCode: StatusCodes.BAD_REQUEST,
-    //   };
-    //   return errorResponse(res, err.message, err.statusCode);
-    // }
 
     userAuth.phoneNumberVerified = true;
     userAuth.otp = "";
@@ -757,10 +738,10 @@ export const loginUser = tryCatch(
       const err: UserError = {
         message: `Invalid credentials. ${
           attempts >= MAX_LOGIN_ATTEMPTS
-            ? "User is blocked."
+            ? "Your login access is blocked."
             : MAX_LOGIN_ATTEMPTS - attempts === 1
-            ? ` You have ${MAX_LOGIN_ATTEMPTS - attempts} attempt left.`
-            : ` You have ${MAX_LOGIN_ATTEMPTS - attempts} attempts left.`
+            ? ` You have ${MAX_LOGIN_ATTEMPTS - attempts} login attempt left.`
+            : ` You have ${MAX_LOGIN_ATTEMPTS - attempts} login attempts left.`
         }`,
         statusCode: StatusCodes.BAD_REQUEST,
       };
@@ -927,14 +908,8 @@ export const generateNewVerificationToken = tryCatch(
     const resetVerificationToken = generateVerificationToken();
 
     // Set verification token expire date to 3 hours
-    // const verificationTokenExpire = new Date();
-    // verificationTokenExpire.setHours(verificationTokenExpire.getHours() + 3);
-
-    // Set verification token expire date to 15 minutes
     const verificationTokenExpire = new Date();
-    verificationTokenExpire.setMinutes(
-      verificationTokenExpire.getMinutes() + 15
-    );
+    verificationTokenExpire.setHours(verificationTokenExpire.getHours() + 3);
 
     // Set verification token and verification token expire date
     userAuth.verificationToken = resetVerificationToken;
@@ -1008,10 +983,6 @@ export const forgotPassword = tryCatch(
     const tokenExpiration = new Date();
     tokenExpiration.setMinutes(tokenExpiration.getMinutes() + 15);
 
-    const expiration =
-      Math.round((tokenExpiration.getTime() - new Date().getTime()) / 60000) +
-      " minutes";
-
     // Set verification token and verification token expire date
     userAuth.resetPasswordToken = resetPasswordToken;
     userAuth.tokenExpiration = tokenExpiration;
@@ -1019,19 +990,8 @@ export const forgotPassword = tryCatch(
     // Save user to database
     await user.save();
 
-    // create verification url
-    const resetPasswordUrl = `${process.env["BASE_URL"]}/user/reset-password/${userAuth.resetPasswordToken}/${user.email}`;
-
     // Send verification email
-    await emailService.sendEmail(
-      user.email,
-      "Reset Password",
-      `<h2>Hello, <span style="color: crimson">${
-        user.fullname.split(" ")[0]
-      }</span></h2>
-    <p>You requested to reset your password. Please click the link below to reset your password. Reset password link expires in ${expiration}</p>
-    <a href="${resetPasswordUrl}" target="_blank" style="background-color: crimson; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Reset Password</a>`
-    );
+    await forgotPasswordEmailTemplate(user, userAuth);
 
     // Return success response
     return successResponse(

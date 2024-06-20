@@ -57,7 +57,7 @@ export const generateNewVerificationTokenTemplate = async (
   const { verificationToken, tokenExpiration } = userAuth;
 
   // set verification url
-  const verificationUrl = `${process.env["BASE_URL"]}/user/verify-email/${verificationToken}/${email}`;
+  const verificationUrl = `${process.env["FRONTEND_URL"]}/verify-email?token=${verificationToken}&email=${email}`;
 
   const expiration = dateConversion(tokenExpiration as Date, "hours");
 
@@ -67,9 +67,36 @@ export const generateNewVerificationTokenTemplate = async (
     fullname.split(" ")[0]
   }</span></h2>
     <p>A new verification token has been generated for you. Please find the token in the link below. Verification link expires in ${expiration}</p>
+    <p>Copy and paste the link in a new tab or click on the button below.</p>
+    <p>"${verificationUrl}"</p>
     <a href="${verificationUrl}" target="_blank" style="background-color: crimson; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Verify Email</a>`;
 
   // send email
+  await emailService.sendEmail(email, subject, html);
+};
+
+/**
+ * @description Forgot Password Email Template
+ */
+
+export const forgotPasswordEmailTemplate = async (
+  user: IUser,
+  userAuth: UserAuth
+) => {
+  const { email } = user;
+  const { resetPasswordToken } = userAuth;
+
+  const resetPasswordUrl = `${process.env["FRONTEND_URL"]}/reset-password/${resetPasswordToken}/${email}`;
+
+  const expiration = dateConversion(userAuth.tokenExpiration as Date, "hours");
+
+  const subject = "Reset Password";
+  const html = `<h2>Hello, <span style="color: crimson">${
+    user.fullname.split(" ")[0]
+  }</span></h2>
+    <p>You requested to reset your password. Please click the link below to reset your password. Reset password link expires in ${expiration}</p>
+    <a href="${resetPasswordUrl}" target="_blank" style="background-color: crimson; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Reset Password</a>`;
+
   await emailService.sendEmail(email, subject, html);
 };
 

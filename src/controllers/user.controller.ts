@@ -37,6 +37,8 @@ import { verifyEmailParams, verifyPhoneParams } from "../@types";
 import { SuccessResponseDataWithToken } from "../@types";
 import { UserObject } from "../@types";
 
+import Cache from "../config/redis.config";
+
 /**
  * @description Register a new user
  * @route POST /users/register
@@ -701,6 +703,19 @@ export const getUserProfile = tryCatch(
     // Get user id from request object
     const userId = (req as unknown as UserObject).user;
 
+    // cache hit
+    const cacheKey = `user-${userId._id}`;
+
+    const cachedUser = await Cache.getClient().get(cacheKey);
+    if (cachedUser) {
+      return successResponse(
+        res,
+        "Profile fetched successfully",
+        JSON.parse(cachedUser),
+        StatusCodes.OK
+      );
+    }
+
     // Find user by id
     const user = await User.findOne({ _id: userId }).select({
       password: 0,
@@ -715,6 +730,9 @@ export const getUserProfile = tryCatch(
       };
       return errorResponse(res, err.message, err.statusCode);
     }
+
+    // cache miss
+    await Cache.getClient().set(cacheKey, JSON.stringify(user));
 
     // Return success response
     return successResponse(

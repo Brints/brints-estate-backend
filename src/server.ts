@@ -8,6 +8,7 @@ const port: string | number = process.env["PORT"] || 1234;
 
 // import database connection
 import connectDB from "./database/connect.database";
+import redisConfig from "./config/redis.config";
 
 // set port
 app.set("port", port);
@@ -18,6 +19,9 @@ export const server: http.Server = http.createServer(app);
 // function to connect to database and start server
 export const startServer = async (): Promise<void> => {
   try {
+    // connect to redis
+    redisConfig.connect();
+
     // connect to database
     await connectDB();
 

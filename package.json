@@ -1,6 +1,6 @@
 {
   "name": "brints-estate-backend",
-  "packageManager": "yarn@4.0.2",
+  "packageManager": "yarn@4.2.2",
   "main": "dist/server.js",
   "license": "MIT",
   "private": true,
@@ -36,6 +36,7 @@
     "@types/nodemailer": "^6",
     "@types/nodemailer-mailgun-transport": "^1.4.6",
     "@types/paystack": "^2.0.4",
+    "@types/redis": "^4.0.11",
     "@types/supertest": "^6",
     "@types/twilio": "^3.19.3",
     "@typescript-eslint/eslint-plugin": "^6.17.0",

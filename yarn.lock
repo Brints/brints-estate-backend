@@ -1873,6 +1873,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@redis/client@npm:1.5.16":
+  version: 1.5.16
+  resolution: "@redis/client@npm:1.5.16"
+  dependencies:
+    cluster-key-slot: "npm:1.1.2"
+    generic-pool: "npm:3.9.0"
+    yallist: "npm:4.0.0"
+  checksum: 10c0/80098cff9253a78f7f9f8ffb216ef414196f148f34992a3c921595e5c358cbbea7e5c6a2e01ac55a15ef40fe929753b267941e8d71e63f93c9d396755b4ad9db
+  languageName: node
+  linkType: hard
+
 "@redis/graph@npm:1.1.1":
   version: 1.1.1
   resolution: "@redis/graph@npm:1.1.1"
@@ -2251,6 +2262,15 @@ __metadata:
   version: 1.2.7
   resolution: "@types/range-parser@npm:1.2.7"
   checksum: 10c0/361bb3e964ec5133fa40644a0b942279ed5df1949f21321d77de79f48b728d39253e5ce0408c9c17e4e0fd95ca7899da36841686393b9f7a1e209916e9381a3c
+  languageName: node
+  linkType: hard
+
+"@types/redis@npm:^4.0.11":
+  version: 4.0.11
+  resolution: "@types/redis@npm:4.0.11"
+  dependencies:
+    redis: "npm:*"
+  checksum: 10c0/a543607ce2fdb8bf0352bbe5f38ae0b48a48737c497e77d9a28240c8d440c1646b191d4e09f9eb2f93753f2a2b66bb8e7009e7ececc1a29e97bbc88beea542f4
   languageName: node
   linkType: hard
 
@@ -2997,6 +3017,7 @@ __metadata:
     "@types/nodemailer": "npm:^6"
     "@types/nodemailer-mailgun-transport": "npm:^1.4.6"
     "@types/paystack": "npm:^2.0.4"
+    "@types/redis": "npm:^4.0.11"
     "@types/supertest": "npm:^6"
     "@types/twilio": "npm:^3.19.3"
     "@typescript-eslint/eslint-plugin": "npm:^6.17.0"
@@ -6907,6 +6928,20 @@ __metadata:
   dependencies:
     picomatch: "npm:^2.2.1"
   checksum: 10c0/6fa848cf63d1b82ab4e985f4cf72bd55b7dcfd8e0a376905804e48c3634b7e749170940ba77b32804d5fe93b3cc521aa95a8d7e7d725f830da6d93f3669ce66b
+  languageName: node
+  linkType: hard
+
+"redis@npm:*":
+  version: 4.6.14
+  resolution: "redis@npm:4.6.14"
+  dependencies:
+    "@redis/bloom": "npm:1.2.0"
+    "@redis/client": "npm:1.5.16"
+    "@redis/graph": "npm:1.1.1"
+    "@redis/json": "npm:1.0.6"
+    "@redis/search": "npm:1.1.6"
+    "@redis/time-series": "npm:1.0.5"
+  checksum: 10c0/b031399a558fd6f06bf12bfe7722b67901a5cb46128ef3fb7634fbd1d3ce7dfc801ddab2500960ea7cd1c8f4a4cdda93657a4aa0eb8b705b5ed63154834ed91e
   languageName: node
   linkType: hard
 

@@ -33,14 +33,14 @@ class RedisConfig {
     });
 
     this.client.on("error", (error) => {
-      console.error("Redis Client Error: ", error);
+      console.error("⭕ Redis Client Error: ", error);
     });
 
     this.client.on("connect", () => {
-      console.log("Redis Client Connected");
+      console.log("🛢️ Redis Client Connected");
     });
 
-    // this.client.connect();
+    this.client.connect();
 
     return this.client;
   }
@@ -59,37 +59,4 @@ const redisConfig = new RedisConfig({
   port: Number(process.env["REDIS_PORT"]) || 6379,
 });
 
-const redisClient = redisConfig.connect();
-
-export default redisClient;
-
-// class Cache {
-//   private client: Redis.RedisClient;
-
-//   constructor() {
-//     this.client = Redis.createClient({
-//       host: process.env["REDIS_HOST"],
-//       port: parseInt(process.env["REDIS_PORT"]),
-//     });
-//   }
-
-//   public get(key: string): Promise<string> {
-//     return new Promise((resolve, reject) => {
-//       this.client.get(
-//         key,
-//         (err: Error, reply: string | PromiseLike<string>) => {
-//           if (err) {
-//             reject(err);
-//           }
-//           resolve(reply);
-//         }
-//       );
-//     });
-//   }
-
-//   public set(key: string, value: string): void {
-//     this.client.set(key, value);
-//   }
-// }
-
-// export const cache = new Cache();
+export default redisConfig;

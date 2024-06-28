@@ -3,9 +3,12 @@ import express from "express";
 import morgan from "morgan";
 import cors from "cors";
 import helmet from "helmet";
-import multer from "multer";
+import swaggerJSDoc from "swagger-jsdoc";
+import swaggerUI from "swagger-ui-express";
 
 import { StatusCodes } from "http-status-codes";
+import errorHandler from "./middlewares/errorHandler";
+import { multerErrorHandler } from "./middlewares/errorHandler";
 
 // initialize express app
 const app: express.Application = express();
@@ -20,6 +23,28 @@ app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Swagger Configuration
+const swaggerOptions = {
+  definition: {
+    openapi: "3.1.0",
+    info: {
+      title: "Brints Estate Backend Service",
+      version: "1.0.0",
+      description: "REST API for Brints Estate Backend Service",
+      contact: {
+        name: "Aniebiet Afia",
+      },
+      servers: [
+        {
+          url: "http://localhost:3001",
+        },
+      ],
+    },
+    schemes: ["http", "https"],
+  },
+  apis: ["./src/routes/*.ts", "./dist/routes/*.js"],
+};
+
 // mount routes
 app.use("/", routes);
 
@@ -30,26 +55,15 @@ app.get("/", (_req: express.Request, res: express.Response) => {
   });
 });
 
+// Swagger UI
+const swaggerSpec = swaggerJSDoc(swaggerOptions);
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
+
+// jwt error handler
+app.use(errorHandler);
+
 // error handling middleware for Multer
-app.use(
-  (
-    err: Error,
-    _req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) => {
-    if (err instanceof multer.MulterError) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        message: {
-          size: "Image size should not be more than 5MB",
-          format: "Image format should be png, jpg or jpeg",
-        },
-      });
-    } else {
-      return next(err);
-    }
-  }
-);
+app.use(multerErrorHandler);
 
 // define 404 route handler
 app.all("*", (_req: express.Request, res: express.Response) => {

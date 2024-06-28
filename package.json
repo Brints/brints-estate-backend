@@ -38,6 +38,8 @@
     "@types/paystack": "^2.0.4",
     "@types/redis": "^4.0.11",
     "@types/supertest": "^6",
+    "@types/swagger-jsdoc": "^6",
+    "@types/swagger-ui-express": "^4.1.6",
     "@types/twilio": "^3.19.3",
     "@typescript-eslint/eslint-plugin": "^6.17.0",
     "@typescript-eslint/parser": "^6.17.0",
@@ -72,6 +74,8 @@
     "paystack": "^2.0.1",
     "paystack-sdk": "^2.5.13",
     "redis": "^4.6.13",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "twilio": "^5.0.4"
   }
 }

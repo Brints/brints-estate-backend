@@ -30,6 +30,6 @@ export const verifyToken = (token: string): Record<string, unknown> | null => {
     return payload as Record<string, unknown>;
   } catch (error) {
     console.error(error);
-    return null;
+    throw error;
   }
 };

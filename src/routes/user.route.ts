@@ -2,7 +2,7 @@
 import { Router } from "express";
 import { multerConfig } from "../config/multer.config";
 
-const upload = multerConfig.array("avatar", 5);
+const upload = multerConfig.array("avatar", 1);
 
 // controllers
 import * as userController from "../controllers/user.controller";

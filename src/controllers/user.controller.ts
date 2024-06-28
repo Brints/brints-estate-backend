@@ -203,14 +203,11 @@ export const registerUser = tryCatch(
     // Upload images to cloudinary
     if (req.files) {
       const images = req.files as Express.Multer.File[];
-      // const filename = images.map((image) => image.filename);
       const imagesUrl = await Promise.all(
         images.map(async (image) => {
-          //Add current Date & Time to the image name
-          const filename = `${Date.now()}-${image.originalname}`;
           // upload image to cloudinary with file path and filename
           const result = await cloudinary.uploader.upload(image.path);
-          return { url: result.secure_url, filename: filename };
+          return { url: result.secure_url, filename: result.original_filename };
         })
       );
       newUser.avatar = imagesUrl;
@@ -1026,7 +1023,7 @@ export const changePassword = tryCatch(
     const { oldPassword, newPassword, confirmPassword } = req.body;
 
     // Get user id from request object
-    const userId = (req as unknown as UserObject).user;
+    const userId = (req as unknown as UserObject).user._id;
 
     // Find user by id
     const user = await User.findOne({ _id: userId });

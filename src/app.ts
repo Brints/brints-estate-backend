@@ -26,7 +26,8 @@ app.use(express.urlencoded({ extended: true }));
 // Swagger Configuration
 const swaggerOptions = {
   definition: {
-    openapi: "3.1.0",
+    // openapi: "3.1.0",
+    openapi: "3.0.0",
     info: {
       title: "Brints Estate Backend Service",
       version: "1.0.0",
@@ -34,15 +35,11 @@ const swaggerOptions = {
       contact: {
         name: "Aniebiet Afia",
       },
-      servers: [
-        {
-          url: "http://localhost:3001",
-        },
-      ],
+      servers: ["http://localhost:3001"],
     },
     schemes: ["http", "https"],
   },
-  apis: ["./src/routes/*.ts", "./dist/routes/*.js"],
+  apis: ["./src/routes/*.ts"],
 };
 
 // mount routes

@@ -9,11 +9,16 @@ export default function errorHandler(
   res: Response,
   next: NextFunction
 ) {
-  if (err.name === "TokenExpiredError") {
+  if (err instanceof TokenExpiredError) {
+    const error = {
+      message: err.message,
+      name: err.name,
+      expiredAt: err.expiredAt,
+    };
+
     return res.status(401).json({
       success: false,
-      message: "🚫 Unauthorized Access. Token has expired. Please login again.",
-      expiredAt: err.expiredAt,
+      error,
     });
   }
   return next(err);

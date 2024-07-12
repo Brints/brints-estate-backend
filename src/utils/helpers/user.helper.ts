@@ -20,6 +20,7 @@ export class UserHelper {
         phone: user.phone,
         role: user.role,
         verified: user.verified,
+        last_login: user.last_login,
         createdAt: user["createdAt"],
         updatedAt: user["updatedAt"],
         token: user["token"],

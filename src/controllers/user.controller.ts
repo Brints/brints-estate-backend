@@ -979,13 +979,15 @@ export const forgotPassword = tryCatch(
     // Generate verification token
     const resetPasswordToken: string = generateVerificationToken();
 
-    // Set verification token expire date to 15 minutes
+    // Set verification token expire date to 3 hours
     const tokenExpiration = new Date();
-    tokenExpiration.setMinutes(tokenExpiration.getMinutes() + 15);
+    tokenExpiration.setHours(tokenExpiration.getHours() + 3);
 
     // Set verification token and verification token expire date
     userAuth.resetPasswordToken = resetPasswordToken;
     userAuth.tokenExpiration = tokenExpiration;
+
+    await userAuth.save();
 
     // Save user to database
     await user.save();

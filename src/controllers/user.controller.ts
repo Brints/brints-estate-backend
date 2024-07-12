@@ -37,6 +37,8 @@ import { verifyEmailParams, verifyPhoneParams } from "../@types";
 import { SuccessResponseDataWithToken } from "../@types";
 import { UserObject } from "../@types";
 
+import Cache from "../config/redis.config";
+
 /**
  * @description Register a new user
  * @route POST /users/register
@@ -203,8 +205,9 @@ export const registerUser = tryCatch(
       const images = req.files as Express.Multer.File[];
       const imagesUrl = await Promise.all(
         images.map(async (image) => {
+          // upload image to cloudinary with file path and filename
           const result = await cloudinary.uploader.upload(image.path);
-          return { url: result.secure_url, filename: result.public_id };
+          return { url: result.secure_url, filename: result.original_filename };
         })
       );
       newUser.avatar = imagesUrl;
@@ -276,130 +279,12 @@ export const registerUser = tryCatch(
  * @access Public
  */
 
-type GoogleSignUp = Request<unknown, unknown, unknown, unknown>;
+// class GoogleAuthentication {
+//   constructor() {
+//     this.googleSignUp = this.googleSignUp.bind(this);
 
-export const googleSignUp = tryCatch(
-  async (req: GoogleSignUp, res: UserResponse) => {
-    const { email } = req.body as { email: string };
-
-    // check if the user exists, login the user
-    const user = await User.findOne({ email });
-
-    if (user) {
-      // generate the token
-      const token = generateToken(
-        { id: user._id },
-        process.env["JWT_EXPIRES_IN"] as string
-      );
-
-      if (user.avatar && user.avatar.length === 0 && user.gender === "female") {
-        user.avatar.push({
-          url: "https://e7.pngegg.com/pngimages/961/57/png-clipart-computer-icons-icon-design-apple-icon-format-female-avatar-desktop-wallpaper-silhouette-thumbnail.png",
-          filename: "female avatar",
-        });
-      } else if (
-        user.avatar &&
-        user.avatar.length === 0 &&
-        user.gender === "male"
-      ) {
-        user.avatar.push({
-          url: "https://w7.pngwing.com/pngs/831/88/png-transparent-user-profile-computer-icons-user-interface-mystique-miscellaneous-user-interface-design-smile-thumbnail.png",
-          filename: "male avatar",
-        });
-      }
-
-      // set last login date
-      user.last_login = new Date();
-
-      // format fullname
-      user.fullname = UserHelper.capitalizeFirstLetter(user.fullname);
-
-      // save user to database
-      await user.save();
-
-      // return user object with few details
-      const userResponse = {
-        avatar: user.avatar,
-        fullname: user.fullname,
-        email: user.email,
-        gender: user.gender,
-        phone: user.phone,
-        role: user.role,
-        verified: user.verified,
-        last_login: user.last_login,
-        token,
-      };
-
-      // return success response
-      return successResponse(
-        res,
-        "User logged in successfully",
-        userResponse as unknown as IUser,
-        StatusCodes.OK
-      );
-    } else {
-      const { avatar, fullname, email } = req.body as {
-        avatar: string;
-        fullname: string;
-        email: string;
-      };
-
-      // generate random strong password
-      const randomPassword = Math.random().toString(36).slice(-10);
-
-      // hash user password
-      const hashedPassword = await BcryptHelper.hashPassword(randomPassword);
-
-      // format fullname
-      UserHelper.capitalizeFirstLetter(fullname);
-
-      // make user an admin if it is the first user
-      const users = await User.find();
-      const role = users.length === 0 ? "admin" : "user";
-
-      const defaultAvatar: { url: string; filename: string }[] = [];
-      defaultAvatar.push({
-        url: avatar,
-        filename: "google avatar",
-      });
-
-      // set default gender
-      const gender = "male";
-
-      // set default phone number
-      const phone = "00000000000";
-
-      // set verified to true
-      const verified = true;
-
-      // create new user
-      const newUser: IUser = new User({
-        avatar: defaultAvatar,
-        fullname,
-        email,
-        password: hashedPassword,
-        role,
-        gender,
-        phone,
-        verified,
-      });
-
-      // save user to database
-      await newUser.save();
-
-      // send welcome email
-      // await registerEmailTemplate(newUser);
-
-      // return success response
-      return successResponse(
-        res,
-        "Success! Please check your email to verify your account.",
-        {} as IUser,
-        StatusCodes.CREATED
-      );
-    }
-  }
-);
+//   }
+// }
 
 /**
  * @description Verify user email
@@ -815,6 +700,19 @@ export const getUserProfile = tryCatch(
     // Get user id from request object
     const userId = (req as unknown as UserObject).user;
 
+    // cache hit
+    const cacheKey = `user-${userId._id}`;
+
+    const cachedUser = await Cache.getClient().get(cacheKey);
+    if (cachedUser) {
+      return successResponse(
+        res,
+        "Profile fetched successfully",
+        JSON.parse(cachedUser),
+        StatusCodes.OK
+      );
+    }
+
     // Find user by id
     const user = await User.findOne({ _id: userId }).select({
       password: 0,
@@ -829,6 +727,9 @@ export const getUserProfile = tryCatch(
       };
       return errorResponse(res, err.message, err.statusCode);
     }
+
+    // cache miss
+    await Cache.getClient().set(cacheKey, JSON.stringify(user));
 
     // Return success response
     return successResponse(
@@ -1124,7 +1025,7 @@ export const changePassword = tryCatch(
     const { oldPassword, newPassword, confirmPassword } = req.body;
 
     // Get user id from request object
-    const userId = (req as unknown as UserObject).user;
+    const userId = (req as unknown as UserObject).user._id;
 
     // Find user by id
     const user = await User.findOne({ _id: userId });

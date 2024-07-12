@@ -2,7 +2,7 @@
 import { Router } from "express";
 import { multerConfig } from "../config/multer.config";
 
-const upload = multerConfig.array("avatar", 5);
+const upload = multerConfig.array("avatar", 1);
 
 // controllers
 import * as userController from "../controllers/user.controller";
@@ -24,14 +24,35 @@ import {
 
 const userRouter: Router = Router();
 
-// routes
+// /**
+//  * @swagger
+//  * /user/register:
+//  *  post:
+//  *   summary: Register a new user account
+//  *  tags:
+//  *   - User
+//  * requestBody:
+//  *  required: true
+//  * content:
+//  *  application/json:
+//  * schema:
+//  * $ref: '#/components/schemas/UserRegistration'
+//  * responses:
+//  *  200:
+//  *   description: User account created successfully
+//  *  400:
+//  *  description: Bad request
+//  *  500:
+//  *    description: Internal server error
+//  *  409:
+//  *   description: User already exists
+//  */
 userRouter.post(
   "/register",
   upload,
   validateUserRegistration,
   userController.registerUser
 );
-userRouter.post("/google-signup", userController.googleSignUp);
 userRouter.post("/resend-otp", userController.resendOTP);
 userRouter.get(
   "/verify-email",

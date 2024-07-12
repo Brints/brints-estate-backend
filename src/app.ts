@@ -3,12 +3,23 @@ import express from "express";
 import morgan from "morgan";
 import cors from "cors";
 import helmet from "helmet";
-import multer from "multer";
+// import swaggerJSDoc from "swagger-jsdoc";
+import swaggerUI from "swagger-ui-express";
+import YAML from "yamljs";
+import OpenAPIValidator from "express-openapi-validator";
 
 import { StatusCodes } from "http-status-codes";
+import errorHandler from "./middlewares/errorHandler";
+import { multerErrorHandler } from "./middlewares/errorHandler";
 
 // initialize express app
 const app: express.Application = express();
+
+// load the openapi document
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+const openAPIDocument = YAML.load("./documentation.yaml");
+// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(openAPIDocument));
 
 // import routes
 import routes from "./routes/index.route";
@@ -20,6 +31,15 @@ app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Swagger Configuration
+app.use(
+  OpenAPIValidator.middleware({
+    apiSpec: "./documentation.yaml",
+    validateRequests: true,
+    validateResponses: true,
+  })
+);
+
 // mount routes
 app.use("/", routes);
 
@@ -30,26 +50,15 @@ app.get("/", (_req: express.Request, res: express.Response) => {
   });
 });
 
+// Swagger UI
+// const swaggerSpec = swaggerJSDoc(swaggerOptions);
+// app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
+
+// jwt error handler
+app.use(errorHandler);
+
 // error handling middleware for Multer
-app.use(
-  (
-    err: Error,
-    _req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) => {
-    if (err instanceof multer.MulterError) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        message: {
-          size: "Image size should not be more than 5MB",
-          format: "Image format should be png, jpg or jpeg",
-        },
-      });
-    } else {
-      return next(err);
-    }
-  }
-);
+app.use(multerErrorHandler);
 
 // define 404 route handler
 app.all("*", (_req: express.Request, res: express.Response) => {

@@ -375,8 +375,6 @@ export const validateChangePassword = [
     .withMessage("Confirm Password Field is required.")
     .notEmpty()
     .withMessage("Confirm Password cannot be empty.")
-    .equals("newPassword")
-    .withMessage("Password does not match.")
     .trim(),
 
   (req: Request, res: ValidateUserResponse, next: NextFunction) => {
@@ -384,7 +382,7 @@ export const validateChangePassword = [
 
     if (!errors.isEmpty()) {
       const err = {
-        message: errors.array().join(" ,"),
+        message: errors.array().join(", "),
         statusCode: StatusCodes.BAD_REQUEST,
       };
       return errorResponse(res, err.message, err.statusCode);

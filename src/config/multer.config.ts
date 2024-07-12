@@ -22,16 +22,21 @@ const storage = new CloudinaryStorage({
   } as CustomParams,
 });
 
+const FILE_SIZE = 1024 * 1024 * 4; // 4MB
+
 export const multerConfig = multer({
   storage,
   limits: {
-    fileSize: 1024 * 1024 * 5, // 5MB
+    fileSize: FILE_SIZE,
   },
-  fileFilter: (_req, file, callback) => {
+  fileFilter: (_req, file, cb) => {
     if (!file.mimetype.startsWith("image/")) {
-      return callback(null, false);
+      return cb(new Error("Only images are allowed"));
     }
-    callback(null, true);
+    if (file.size > FILE_SIZE) {
+      return cb(new Error("Image should not be more than 4MB"));
+    }
+    cb(null, true);
   },
 });
 

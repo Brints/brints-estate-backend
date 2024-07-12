@@ -56,8 +56,9 @@ export const authenticatedUser = async (
     // get user from database and attach to request object
     req.user = user as IUser;
     next();
-  } catch (error) {
-    console.error(error);
-    return errorResponse(res, "Unauthorized", StatusCodes.UNAUTHORIZED);
+  } catch (error: any) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, error });
   }
 };

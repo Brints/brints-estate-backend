@@ -25,6 +25,8 @@ import {
 } from "../@types/listing";
 import { SuccessResponseData } from "../@types/listing";
 
+import Cache from "../config/redis.config";
+
 /**
  * @desc    Create new listing
  * @route   POST /listings/create
@@ -269,6 +271,24 @@ export const getSingleListing = tryCatch(
     // destructure the id from the params
     const { listingId } = req.params;
 
+    const cacheKey = `listing-${listingId}`;
+    const cachedListing = await Cache.getClient().get(cacheKey);
+
+    // cache hit
+    if (cachedListing) {
+      const success: SuccessResponseData<IListing> = {
+        message: "Successful",
+        payload: JSON.parse(cachedListing) as IListing,
+        statusCode: StatusCodes.OK,
+      };
+      return successResponse(
+        res,
+        success.message,
+        success.payload,
+        success.statusCode
+      );
+    }
+
     // customize error if casting fails
     if (listingId && !listingId.match(/^[0-9a-fA-F]{24}$/)) {
       const error: ListingError = {
@@ -292,6 +312,9 @@ export const getSingleListing = tryCatch(
       .populate("owner", "fullname email")
       .populate("location", "name address town province country postalCode")
       .populate("coordinates");
+
+    // cache the listing
+    await Cache.getClient().set(cacheKey, JSON.stringify(listing));
 
     if (!listing) {
       const error: ListingError = {

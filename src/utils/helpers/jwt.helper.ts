@@ -10,7 +10,7 @@ import { Secret } from "jsonwebtoken";
 
 export const generateToken = (
   payload: Record<string, unknown>,
-  expiresIn: string | number = "1h"
+  expiresIn: string | number = process.env["JWT_EXPIRES_IN"] as string
 ): string => {
   const token = jwt.sign(payload, process.env["JWT_SECRET"] as Secret, {
     expiresIn,
@@ -29,7 +29,14 @@ export const verifyToken = (token: string): Record<string, unknown> | null => {
     const payload = jwt.verify(token, process.env["JWT_SECRET"] as Secret);
     return payload as Record<string, unknown>;
   } catch (error) {
-    console.error(error);
+    if (error instanceof jwt.TokenExpiredError) {
+      const err = {
+        message: error.message,
+        name: error.name,
+        expiredAt: error.expiredAt,
+      };
+      throw err;
+    }
     return null;
   }
 };

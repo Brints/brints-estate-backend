@@ -3,8 +3,10 @@ import express from "express";
 import morgan from "morgan";
 import cors from "cors";
 import helmet from "helmet";
-import swaggerJSDoc from "swagger-jsdoc";
+// import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUI from "swagger-ui-express";
+import YAML from "yamljs";
+import OpenAPIValidator from "express-openapi-validator";
 
 import { StatusCodes } from "http-status-codes";
 import errorHandler from "./middlewares/errorHandler";
@@ -12,6 +14,12 @@ import { multerErrorHandler } from "./middlewares/errorHandler";
 
 // initialize express app
 const app: express.Application = express();
+
+// load the openapi document
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+const openAPIDocument = YAML.load("./documentation.yaml");
+// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(openAPIDocument));
 
 // import routes
 import routes from "./routes/index.route";
@@ -24,23 +32,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Swagger Configuration
-const swaggerOptions = {
-  definition: {
-    // openapi: "3.1.0",
-    openapi: "3.0.0",
-    info: {
-      title: "Brints Estate Backend Service",
-      version: "1.0.0",
-      description: "REST API for Brints Estate Backend Service",
-      contact: {
-        name: "Aniebiet Afia",
-      },
-      servers: ["http://localhost:3001"],
-    },
-    schemes: ["http", "https"],
-  },
-  apis: ["./src/routes/*.ts"],
-};
+app.use(
+  OpenAPIValidator.middleware({
+    apiSpec: "./documentation.yaml",
+    validateRequests: true,
+    validateResponses: true,
+  })
+);
 
 // mount routes
 app.use("/", routes);
@@ -53,8 +51,8 @@ app.get("/", (_req: express.Request, res: express.Response) => {
 });
 
 // Swagger UI
-const swaggerSpec = swaggerJSDoc(swaggerOptions);
-app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
+// const swaggerSpec = swaggerJSDoc(swaggerOptions);
+// app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
 // jwt error handler
 app.use(errorHandler);

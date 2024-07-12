@@ -24,29 +24,29 @@ import {
 
 const userRouter: Router = Router();
 
-/**
- * @swagger
- * /user/register:
- *  post:
- *   summary: Register a new user account
- *  tags:
- *   - User
- * requestBody:
- *  required: true
- * content:
- * application/json:
- * schema:
- * $ref: '#/components/schemas/UserRegistration'
- * responses:
- *  200:
- *   description: User account created successfully
- *  400:
- *  description: Bad request
- *  500:
- *    description: Internal server error
- *  409:
- *   description: User already exists
- */
+// /**
+//  * @swagger
+//  * /user/register:
+//  *  post:
+//  *   summary: Register a new user account
+//  *  tags:
+//  *   - User
+//  * requestBody:
+//  *  required: true
+//  * content:
+//  *  application/json:
+//  * schema:
+//  * $ref: '#/components/schemas/UserRegistration'
+//  * responses:
+//  *  200:
+//  *   description: User account created successfully
+//  *  400:
+//  *  description: Bad request
+//  *  500:
+//  *    description: Internal server error
+//  *  409:
+//  *   description: User already exists
+//  */
 userRouter.post(
   "/register",
   upload,

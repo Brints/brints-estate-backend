@@ -41,6 +41,7 @@
     "@types/swagger-jsdoc": "^6",
     "@types/swagger-ui-express": "^4.1.6",
     "@types/twilio": "^3.19.3",
+    "@types/yamljs": "^0",
     "@typescript-eslint/eslint-plugin": "^6.17.0",
     "@typescript-eslint/parser": "^6.17.0",
     "concurrently": "^8.2.2",
@@ -59,6 +60,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "express-openapi-validator": "^5.2.0",
     "express-validator": "^7.0.1",
     "helmet": "^7.1.0",
     "http-status-codes": "^2.3.0",
@@ -76,6 +78,7 @@
     "redis": "^4.6.13",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "twilio": "^5.0.4"
+    "twilio": "^5.0.4",
+    "yamljs": "^0.3.0"
   }
 }

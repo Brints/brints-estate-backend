@@ -1,0 +1,163 @@
+openapi: 3.0.0
+info:
+  title: Brints Estate API
+  description: API for Brints Estate
+  version: 1.0.0
+servers:
+  - url: http://localhost:3001
+    description: Local server
+  - url: https://api.brintsestate.com
+    description: Production server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      required:
+        - fullname
+        - email
+        - password
+        - phone
+        - role
+        - verified
+      properties:
+        id:
+          type: string
+          format: ObjectId
+          example: 5f8a1b7b0f1e5b0017b3b1b1
+        fullname:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: john-doe@example.com
+        password:
+          type: string
+          format: password
+          example: password
+        phone:
+          type: string
+          example: 08012345678
+        gender:
+          type: string
+          enum:
+            - male
+            - female
+        role:
+          type: string
+          enum:
+            - user
+            - admin
+            - realtor
+            - landlord
+          example: user
+        verified:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          example: 2020-10-17T12:00:00.000Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2020-10-17T12:00:00.000Z
+        avatar:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+                example: https://example.com/avatar.jpg
+              public_id:
+                type: string
+                example: avatar.jpg
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Field cannot be empty
+        status:
+          type: integer
+          example: 400
+
+  responses:
+    UnauthorizedError:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+    ForbiddenError:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+paths:
+  /user/register:
+    post:
+      summary: Register a new user
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+                example: "Registration successful"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+                example: "Invalid input"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+                example: "User exists already."
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+                example: "Server error occurred."
